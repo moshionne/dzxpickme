@@ -1,2 +1,2 @@
 # dzxpickme
-dzx ukjnftn ;jcrj
+dzx ukjnftn ;jcrj этоо жесть
