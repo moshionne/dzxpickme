@@ -1,5 +1,5 @@
 /*
- 
+ весь дизайн - черновик иишный, чтобы смотреть на сайт возможно было
 */
 
 using Microsoft.AspNetCore.Http;
@@ -907,20 +907,19 @@ app.MapGet("/profile", async (HttpContext context, AppDbContext db) =>
                 </div>
                 <div>
                     <div class="info-item">
-                        <div class="info-label">Логин:</div>
+                        <div class="info-label">Количество пройденных викторин:</div>
                         <div class="info-value">{{user.QuizzesPassed}}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">Логин:</div>
+                        <div class="info-label">Количество созданных викторин:</div>
                         <div class="info-value">{{user.QuizzesCreated}}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">Логин:</div>
+                        <div class="info-label">Лучший счет:</div>
                         <div class="info-value">{{user.BestScore}}</div>
                     </div>
                 </div>
                 <div class="button-group">
-                    <a href="/shop" class="button">Перейти в магазин</a>
                     <form method="post" action="/logout" style="display: inline;">
                         <button type="submit" class="logout-btn">Выйти</button>
                     </form>
@@ -1585,7 +1584,324 @@ app.MapGet("/quizzes/custom", async (AppDbContext db, HttpContext context) =>
     </html>";
 
     return Results.Content(html, "text/html; charset=utf-8");
-});// Пользовательские викторины (от всех пользователей, кроме админа)
+});
+//прохождение викторинки
+app.MapGet("/quiz/{id:int}", async (int id, HttpContext context, AppDbContext db) =>
+{
+    string userId = context.Session.GetString("UserId"); //достаем юзера
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Redirect("/login");
+    }
+
+    var quiz = await db.Quizzes  //достаем викторину
+        .Include(q => q.Questions)
+            .ThenInclude(q => q.Answers)
+        .FirstOrDefaultAsync(q => q.Id == id);
+
+    if (quiz == null) //если не нашли - показываем ошибку
+        return Results.NotFound("Викторина не найдена");
+
+    //делаем вопросы и ответы(потом все добавим в общ HTML)
+    string questionsHtml = "";
+    foreach (var question in quiz.Questions.OrderBy(q => q.OrderNum))
+    {
+        string answersHtml = "";
+        foreach (var answer in question.Answers.OrderBy(a => a.OrderNum))
+        {
+            answersHtml += $@"
+            <label class='answer-option'>
+                <input type='radio' name='q{question.Id}' value='{answer.Id}' required>
+                <span>{answer.Text}</span>
+            </label>";
+        }
+
+        questionsHtml += $@"
+        <div class='question-block'>
+            <div class='question-header'>
+                <span class='question-num'>Вопрос {question.OrderNum}</span>
+                <span class='question-points'>{question.Points} очков</span>
+            </div>
+            <div class='question-text'>{question.Text}</div>
+            <div class='answers'>
+                {answersHtml}
+            </div>
+        </div>";
+    }
+
+    string html = $@"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{quiz.Title}</title>
+        <meta charset='UTF-8'>
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            body {{
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: white;
+                color: black;
+                padding: 40px;
+            }}
+            .container {{
+                max-width: 800px;
+                margin: 0 auto;
+            }}
+            .quiz-header {{
+                border: 1px solid black;
+                padding: 30px;
+                margin-bottom: 30px;
+                text-align: center;
+            }}
+            h1 {{
+                font-size: 2em;
+                margin-bottom: 10px;
+                border-bottom: 2px solid black;
+                display: inline-block;
+            }}
+            .question-block {{
+                border: 1px solid black;
+                padding: 20px;
+                margin-bottom: 20px;
+                background: white;
+            }}
+            .question-header {{
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #ccc;
+            }}
+            .question-num {{
+                font-weight: bold;
+                color: #667eea;
+            }}
+            .question-points {{
+                font-weight: bold;
+                color: #28a745;
+            }}
+            .question-text {{
+                margin-bottom: 20px;
+                font-size: 1.1em;
+            }}
+            .answers {{
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }}
+            .answer-option {{
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 8px;
+                border: 1px solid #eee;
+                cursor: pointer;
+            }}
+            .answer-option:hover {{
+                background: #f5f5f5;
+            }}
+            input[type='radio'] {{
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+            }}
+            .submit-btn {{
+                background: black;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                font-size: 1.1em;
+                cursor: pointer;
+                width: 100%;
+                margin-top: 20px;
+                font-family: monospace;
+            }}
+            .submit-btn:hover {{
+                background: #333;
+            }}
+            .nav-btn {{
+                background: black;
+                color: white;
+                text-decoration: none;
+                padding: 8px 16px;
+                display: inline-block;
+                margin-bottom: 20px;
+            }}
+            .nav-btn:hover {{
+                background: #333;
+            }}
+            @media (max-width: 600px) {{
+                body {{ padding: 20px; }}
+                .quiz-header {{ padding: 20px; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <a href='/quizzes/default' class='nav-btn'>Назад</a>
+            
+            <div class='quiz-header'>
+                <h1>{quiz.Title}</h1>
+                <p>{quiz.Description ?? "No description"}</p>
+                <p>Максимум баллов: {quiz.TotalPoints}</p>
+            </div>
+            
+            <form method='post' action='/quiz/{quiz.Id}/submit'>
+                {questionsHtml}
+                <button type='submit' class='submit-btn'>Завершить</button>
+            </form>
+        </div>
+    </body>
+    </html>";
+
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+//обработчик
+app.MapPost("/quiz/{id:int}/submit", async (int id, HttpContext context, AppDbContext db) =>
+{
+    string userId = context.Session.GetString("UserId");//достаем узера
+    if (string.IsNullOrEmpty(userId))
+        return Results.Redirect("/login");
+
+    int currentUserId = int.Parse(userId);
+    var form = await context.Request.ReadFormAsync();
+
+    //загружаем викторинко
+    var quiz = await db.Quizzes
+        .Include(q => q.Questions)
+            .ThenInclude(q => q.Answers)
+        .FirstOrDefaultAsync(q => q.Id == id);
+
+    if (quiz == null)
+        return Results.NotFound("НЕту");
+
+    int totalScore = 0;
+    var userAnswers = new List<UserAnswer>();
+
+    //подсчёт баллов
+    foreach (var question in quiz.Questions)
+    {
+        string answerKey = $"q{question.Id}";
+        string selectedAnswerId = form[answerKey];
+
+        if (!string.IsNullOrEmpty(selectedAnswerId) && int.TryParse(selectedAnswerId, out int answerId))
+        {
+            var selectedAnswer = question.Answers.FirstOrDefault(a => a.Id == answerId);
+            bool isCorrect = selectedAnswer?.IsCorrect ?? false;
+
+            if (isCorrect)
+            {
+                totalScore += question.Points;
+            }
+
+            userAnswers.Add(new UserAnswer
+            {
+                QuestionId = question.Id,
+                AnswerId = answerId,
+                IsCorrect = isCorrect
+            });
+        }
+    }
+
+    //сохраняем результат
+    var result = new Result
+    {
+        UserId = currentUserId,
+        QuizId = id,
+        Score = totalScore,
+        MaxScore = quiz.TotalPoints,
+        Percentage = quiz.TotalPoints > 0 ? (totalScore * 100.0m / quiz.TotalPoints) : 0
+    };
+
+    db.Results.Add(result);
+    await db.SaveChangesAsync();
+
+    //сохраняем ответы
+    foreach (var ua in userAnswers)
+    {
+        ua.ResultId = result.Id;
+        db.UserAnswers.Add(ua);
+    }
+    await db.SaveChangesAsync();
+
+    //обновляем статисктику пользваотеля
+    var user = await db.Users.FindAsync(currentUserId);
+    if (user != null)
+    {
+        user.QuizzesPassed++;
+        user.TotalPoints += totalScore;
+        if (totalScore > user.BestScore)
+            user.BestScore = totalScore;
+        await db.SaveChangesAsync();
+    }
+
+    //обновляем статисику викторины
+    quiz.TimesPlayed++;
+
+    var allResults = await db.Results
+        .Where(r => r.QuizId == id)
+        .ToListAsync();
+
+    if (allResults.Any())
+    {
+        quiz.AverageScore = allResults.Average(r => r.Percentage ?? 0);
+    }
+    await db.SaveChangesAsync();
+
+    //показваем пользователю результат
+    int percentage = quiz.TotalPoints > 0 ? (totalScore * 100 / quiz.TotalPoints) : 0;
+
+    string resultHtml = $@"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Result</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: white;
+                color: black;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+            .container {{
+                border: 1px solid black;
+                padding: 40px;
+                max-width: 500px;
+                width: 100%;
+                text-align: center;
+            }}
+            h1 {{ font-size: 2em; margin-bottom: 20px; border-bottom: 2px solid black; display: inline-block; }}
+            .score {{ font-size: 48px; font-weight: bold; margin: 20px 0; }}
+            .percentage {{ font-size: 24px; margin: 10px 0; }}
+            .status {{ margin: 20px 0; padding: 10px; border: 1px solid black; display: inline-block; }}
+            .btn {{ display: inline-block; background: black; color: white; text-decoration: none; padding: 10px 20px; margin: 10px; }}
+            .btn:hover {{ background: #333; }}
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <h1>Результат</h1>
+            <div class='score'>{totalScore} / {quiz.TotalPoints}</div>
+            <div class='percentage'>({percentage}%)</div>
+            <div>
+                <a href='/' class='btn'>На главную</a>
+                <a href='/profile' class='btn'>Профиль</a>
+            </div>
+        </div>
+    </body>
+    </html>";
+
+    return Results.Content(resultHtml, "text/html; charset=utf-8");
+});
 app.Run();
 static string BuildPostgresConnectionString(string rawConnectionString) //жоска украденный код по преобразованию строки
 {
