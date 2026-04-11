@@ -57,10 +57,10 @@ app.MapGet("/", async (HttpContext context) =>
     if (isLoggedIn)
     {
         buttonsHtml = @"
-                        <form method=""get"" action=""/quizes/default"">
+                        <form method=""get"" action=""/quizzes/default"">
                             <button type=""submit"" class=""shop-btn"">Дефолт викторины</button>
                         </form>
-                        <form method=""get"" action=""/quizes/custom"">
+                        <form method=""get"" action=""/quizzes/custom"">
                             <button type=""submit"" class=""shop-btn"">Викторины от пользователей</button>
                         </form>
                         <form method=""get"" action=""/profile"">
@@ -936,123 +936,656 @@ app.MapGet("/profile", async (HttpContext context, AppDbContext db) =>
     return Results.Content(profileHtml, "text/html; charset=utf-8");
 });
 
-app.MapGet("/quizes/default", async (HttpContext context, AppDbContext db) =>
+//деф викторинф
+app.MapGet("/quizzes/default", async (AppDbContext db, HttpContext context) =>
 {
-    string userId = context.Session.GetString("UserId");    // |    достаем пользлвателя
-    var user = await db.Users.FindAsync(int.Parse(userId)); // |    из бд
-    var quizzes = await db.Quizzes.ToListAsync();           //достаем викторинки из бд
+    string userId = context.Session.GetString("UserId");
+    bool isLoggedIn = !string.IsNullOrEmpty(userId);
 
-    string QuizzesHtml = "";        // строка с викторинками(потом добавим в остальной HTML код)
-    foreach (var quiz in quizzes)   //перебираем все викторинки
+    // админ — это пользователь с Id = 1(создатель как бы деф викторин)
+    int adminId = 1;
+
+    //получаем только админские викторины
+    var quizzes = await db.Quizzes
+        .Include(q => q.Creator)
+        .Where(q => q.CreatorId == adminId)
+        .OrderByDescending(q => q.TimesPlayed)
+        .ToListAsync();
+
+    // формируем карточки через строку, которую потом добавим в общ HTML
+    string quizzesHtml = "";
+    foreach (var quiz in quizzes)
     {
-        QuizzesHtml += $@"
-        <div class = 'container'>
-            <div>{quiz.Title}</div>
-            <div>Описание: {quiz.Description}</div>
-            <div>Сложность: {quiz.Difficulty}</div>
-            <div>Количество вопросов: {quiz.QuestionsCount}</div>
-            <div>Всего баллов: {quiz.TotalPoints}</div>
-            <div>Количество раз сыграно: {quiz.QuestionsCount}</div>
-            <div>Средний счет: {quiz.AverageScore}</div>
+        quizzesHtml += $@"
+        <a href='/quiz/{quiz.Id}' class='quiz-card-link'>
+            <div class='quiz-card'>
+                <h3>{quiz.Title}</h3>
+                <p>{quiz.Description ?? "Описание отсутствует"}</p>
+                <div class='quiz-stats'>
+                    <span>{quiz.Questions.Count} вопросов</span>
+                    <span>{quiz.TotalPoints} баллов</span>
+                    <span>{quiz.TimesPlayed} игр</span>
+                    <span>Средний балл: {quiz.AverageScore}%</span>
+                </div>
+                <div class='quiz-creator'>Автор: Админко</div>
+            </div>
+        </a>";
+    }
+
+
+    string html = $@"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Деф викторинки</title>
+        <meta charset='UTF-8'>
+        <style>
+    * {{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }}
+    
+    body {{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: white;
+        color: black;
+        padding: 40px;
+    }}
+    
+    .container {{
+        max-width: 1200px;
+        margin: 0 auto;
+    }}
+    
+    /* Заголовки */
+    h1 {{
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        border-bottom: 3px solid black;
+        display: inline-block;
+    }}
+    
+    h2 {{
+        font-size: 1.8em;
+        margin: 30px 0 20px 0;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }}
+    
+    /* Навигация */
+    .nav-buttons {{
+        text-align: center;
+        margin-bottom: 40px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 20px;
+    }}
+    
+    .nav-btn {{
+        background: black;
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        margin: 0 5px;
+        display: inline-block;
+        font-family: monospace;
+        border: 1px solid black;
+    }}
+    
+    .nav-btn:hover {{
+        background: white;
+        color: black;
+    }}
+    
+    /* Кнопки */
+    button, .button {{
+        background: black;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-family: monospace;
+        font-size: 1em;
+        display: inline-block;
+        text-decoration: none;
+    }}
+    
+    button:hover, .button:hover {{
+        background: #333;
+    }}
+    
+    /* Формы */
+    input, textarea, select {{
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0 15px 0;
+        border: 1px solid black;
+        font-family: monospace;
+        background: white;
+    }}
+    
+    label {{
+        font-weight: bold;
+    }}
+    
+    /* Карточки викторин */
+    .quiz-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }}
+    
+    .quiz-card {{
+        border: 1px solid black;
+        padding: 20px;
+        background: white;
+    }}
+    
+    .quiz-card:hover {{
+        background: #f5f5f5;
+    }}
+    
+    .quiz-card-link {{
+        text-decoration: none;
+        color: black;
+    }}
+    
+    .quiz-badge {{
+        display: inline-block;
+        padding: 4px 8px;
+        margin-bottom: 10px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }}
+    
+    .quiz-badge.official {{
+        background: black;
+        color: white;
+    }}
+    
+    .quiz-badge.user {{
+        background: #ccc;
+        color: black;
+    }}
+    
+    .quiz-stats {{
+        margin: 10px 0;
+        font-size: 0.9em;
+        color: #555;
+    }}
+    
+    .quiz-stats span {{
+        margin-right: 15px;
+    }}
+    
+    .quiz-creator {{
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+        font-size: 0.85em;
+        color: #777;
+    }}
+    
+    /* Блоки вопросов */
+    .question-block {{
+        border: 1px solid black;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+    }}
+    
+    .question-header {{
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid black;
+    }}
+    
+    .question-num {{
+        font-weight: bold;
+    }}
+    
+    .question-points {{
+        color: black;
+        font-weight: bold;
+    }}
+    
+    .question-text {{
+        margin-bottom: 15px;
+    }}
+    
+    .answers {{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }}
+    
+    .answer-option {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
+    
+    input[type=""radio""] {{
+        width: auto;
+        margin: 0;
+    }}
+    
+    /* Результат */
+    .result-box {{
+        border: 1px solid black;
+        padding: 40px;
+        text-align: center;
+        margin: 40px 0;
+    }}
+    
+    .score {{
+        font-size: 48px;
+        font-weight: bold;
+        margin: 20px 0;
+    }}
+    
+    /* Пустое состояние */
+    .empty-state {{
+        border: 1px solid #ccc;
+        padding: 60px;
+        text-align: center;
+        color: #777;
+    }}
+    
+    /* Форма создания викторины */
+    .form-group {{
+        margin-bottom: 20px;
+    }}
+    
+    /* Профиль */
+    .info-card {{
+        border: 1px solid black;
+        padding: 20px;
+        margin: 20px 0;
+    }}
+    
+    .info-item {{
+        margin: 10px 0;
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }}
+    
+    .info-label {{
+        font-weight: bold;
+        width: 150px;
+        display: inline-block;
+    }}
+    
+    .button-group {{
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }}
+    
+    @media (max-width: 600px) {{
+        body {{ padding: 20px; }}
+        .quiz-grid {{ grid-template-columns: 1fr; }}
+        .button-group {{ flex-direction: column; }}
+        .info-label {{ width: 100%; display: block; margin-bottom: 5px; }}
+    }}
+</style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='nav-buttons'>
+                <a href='/' class='nav-btn'>Главная</a>
+                <a href='/quizzes/default' class='nav-btn active'>Деф</a>
+                <a href='/quizzes/custom' class='nav-btn'>Пользовательские</a>
+                <a href='/profile' class='nav-btn'>Профиль</a>
+            </div>
+            
+            
+            <div class='quiz-grid'>
+                {quizzesHtml}
+            </div>
+        </div>
+    </body>
+    </html>";
+
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+//пользовательские викторины
+app.MapGet("/quizzes/custom", async (AppDbContext db, HttpContext context) =>
+{
+    string userId = context.Session.GetString("UserId");
+    bool isLoggedIn = !string.IsNullOrEmpty(userId);
+    int currentUserId = isLoggedIn ? int.Parse(userId) : 0;
+
+    int adminId = 1;
+
+    //получаем викторинки
+    var quizzes = await db.Quizzes
+        .Include(q => q.Creator)
+        .Where(q => q.CreatorId != adminId)
+        .ToListAsync();
+
+    //формируем их карточки
+    string quizzesHtml = "";
+    foreach (var quiz in quizzes)
+    {
+        string creatorName = quiz.Creator?.Login ?? "Неизвестный";
+        bool isCurrentUserCreator = isLoggedIn && quiz.CreatorId == currentUserId;
+
+        quizzesHtml += $@"
+        <a href='/quiz/{quiz.Id}' class='quiz-card-link'>
+            <div class='quiz-card'>
+                <div class='quiz-badge'>Пользовательская</div>
+                <h3>{quiz.Title}</h3>
+                <p>{quiz.Description ?? "Описание отсутствует"}</p>
+                <div class='quiz-stats'>
+                    <span>{quiz.Questions.Count} вопросов</span>
+                    <span>{quiz.TotalPoints} баллов</span>
+                    <span>{quiz.TimesPlayed} игр</span>
+                </div>
+                <div class='quiz-creator'>
+                    Автор: {creatorName}
+                    {(isCurrentUserCreator ? "<span style='color: #28a745; margin-left: 10px;'>Ваша викторина</span>" : "")}
+                </div>
+            </div>
+        </a>";
+    }
+
+    //если нет пользовательских викторин
+    if (string.IsNullOrEmpty(quizzesHtml))
+    {
+        quizzesHtml = $@"
+        <div class='empty-state'>
+            <p>Пока нет пользовательских викторин</p>
         </div>";
     }
 
     string html = $@"
     <!DOCTYPE html>
     <html>
-        <head>
-            <title>Деф викторинки</title>
-            <meta charset=""UTF-8"">
-            <style>
-                * {{
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }}
-                body {{
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }}
-                .container {{
-                    background: white;
-                    border-radius: 20px;
-                    padding: 40px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    max-width: 450px;
-                    width: 100%;
-                }}
-                h1 {{
-                    color: #333;
-                    text-align: center;
-                    margin-bottom: 30px;
-                    border-bottom: 3px solid #667eea;
-                    display: inline-block;
-                    width: 100%;
-                    padding-bottom: 10px;
-                }}
-                .form-group {{
-                    margin-bottom: 20px;
-                }}
-                label {{
-                    display: block;
-                    margin-bottom: 8px;
-                    color: #333;
-                    font-weight: 500;
-                }}
-                input {{
-                    width: 100%;
-                    padding: 12px;
-                    border: 2px solid #e0e0e0;
-                    border-radius: 10px;
-                    font-size: 1em;
-                    transition: all 0.3s ease;
-                }}
-                input:focus {{
-                    border-color: #667eea;
-                    outline: none;
-                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-                }}
-                button {{
-                    width: 100%;
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    padding: 14px;
-                    font-size: 1.1em;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    font-weight: 600;
-                    margin-top: 10px;
-                }}
-                button:hover {{
-                    background: #764ba2;
-                    transform: translateY(-2px);
-                }}
-                .back-link {{
-                    display: block;
-                    text-align: center;
-                    margin-top: 20px;
-                    color: #667eea;
-                    text-decoration: none;
-                }}
-                .back-link:hover {{
-                    text-decoration: underline;
-                }}
-            </style>
-        </head>
-        <body>
-            {QuizzesHtml}
-        </body>
+    <head>
+        <title>Пользовательские викторины</title>
+        <meta charset='UTF-8'>
+        <style>
+    * {{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }}
+    
+    body {{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: white;
+        color: black;
+        padding: 40px;
+    }}
+    
+    .container {{
+        max-width: 1200px;
+        margin: 0 auto;
+    }}
+    
+    /* Заголовки */
+    h1 {{
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        border-bottom: 3px solid black;
+        display: inline-block;
+    }}
+    
+    h2 {{
+        font-size: 1.8em;
+        margin: 30px 0 20px 0;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }}
+    
+    /* Навигация */
+    .nav-buttons {{
+        text-align: center;
+        margin-bottom: 40px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 20px;
+    }}
+    
+    .nav-btn {{
+        background: black;
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        margin: 0 5px;
+        display: inline-block;
+        font-family: monospace;
+        border: 1px solid black;
+    }}
+    
+    .nav-btn:hover {{
+        background: white;
+        color: black;
+    }}
+    
+    /* Кнопки */
+    button, .button {{
+        background: black;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-family: monospace;
+        font-size: 1em;
+        display: inline-block;
+        text-decoration: none;
+    }}
+    
+    button:hover, .button:hover {{
+        background: #333;
+    }}
+    
+    /* Формы */
+    input, textarea, select {{
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0 15px 0;
+        border: 1px solid black;
+        font-family: monospace;
+        background: white;
+    }}
+    
+    label {{
+        font-weight: bold;
+    }}
+    
+    /* Карточки викторин */
+    .quiz-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }}
+    
+    .quiz-card {{
+        border: 1px solid black;
+        padding: 20px;
+        background: white;
+    }}
+    
+    .quiz-card:hover {{
+        background: #f5f5f5;
+    }}
+    
+    .quiz-card-link {{
+        text-decoration: none;
+        color: black;
+    }}
+    
+    .quiz-badge {{
+        display: inline-block;
+        padding: 4px 8px;
+        margin-bottom: 10px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }}
+    
+    .quiz-badge.official {{
+        background: black;
+        color: white;
+    }}
+    
+    .quiz-badge.user {{
+        background: #ccc;
+        color: black;
+    }}
+    
+    .quiz-stats {{
+        margin: 10px 0;
+        font-size: 0.9em;
+        color: #555;
+    }}
+    
+    .quiz-stats span {{
+        margin-right: 15px;
+    }}
+    
+    .quiz-creator {{
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+        font-size: 0.85em;
+        color: #777;
+    }}
+    
+    /* Блоки вопросов */
+    .question-block {{
+        border: 1px solid black;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+    }}
+    
+    .question-header {{
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid black;
+    }}
+    
+    .question-num {{
+        font-weight: bold;
+    }}
+    
+    .question-points {{
+        color: black;
+        font-weight: bold;
+    }}
+    
+    .question-text {{
+        margin-bottom: 15px;
+    }}
+    
+    .answers {{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }}
+    
+    .answer-option {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
+    
+    input[type=""radio""] {{
+        width: auto;
+        margin: 0;
+    }}
+    
+    /* Результат */
+    .result-box {{
+        border: 1px solid black;
+        padding: 40px;
+        text-align: center;
+        margin: 40px 0;
+    }}
+    
+    .score {{
+        font-size: 48px;
+        font-weight: bold;
+        margin: 20px 0;
+    }}
+    
+    /* Пустое состояние */
+    .empty-state {{
+        border: 1px solid #ccc;
+        padding: 60px;
+        text-align: center;
+        color: #777;
+    }}
+    
+    /* Форма создания викторины */
+    .form-group {{
+        margin-bottom: 20px;
+    }}
+    
+    /* Профиль */
+    .info-card {{
+        border: 1px solid black;
+        padding: 20px;
+        margin: 20px 0;
+    }}
+    
+    .info-item {{
+        margin: 10px 0;
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }}
+    
+    .info-label {{
+        font-weight: bold;
+        width: 150px;
+        display: inline-block;
+    }}
+    
+    .button-group {{
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }}
+    
+    @media (max-width: 600px) {{
+        body {{ padding: 20px; }}
+        .quiz-grid {{ grid-template-columns: 1fr; }}
+        .button-group {{ flex-direction: column; }}
+        .info-label {{ width: 100%; display: block; margin-bottom: 5px; }}
+    }}
+</style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='nav-buttons'>
+                <a href='/' class='nav-btn'>Главная</a>
+                <a href='/quizzes/default' class='nav-btn'>Официальные</a>
+                <a href='/quizzes/custom' class='nav-btn active'>Пользовательские</a>
+                <a href='/profile' class='nav-btn'>Профиль</a>
+                {(isLoggedIn ? "<a href='/create-quiz' class='nav-btn'>Создать</a>" : "")}
+            </div>
+            
+            <div class='header'>
+                <h1>Пользовательские викторины</h1>
+                <div class='subtitle'>Викторины, созданные участниками сайта</div>
+            </div>
+            
+            <div class='quiz-grid'>
+                {quizzesHtml}
+            </div>
+        </div>
+    </body>
     </html>";
 
     return Results.Content(html, "text/html; charset=utf-8");
-});
-
+});// Пользовательские викторины (от всех пользователей, кроме админа)
 app.Run();
 static string BuildPostgresConnectionString(string rawConnectionString) //жоска украденный код по преобразованию строки
 {
