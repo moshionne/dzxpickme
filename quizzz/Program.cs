@@ -1,26 +1,25 @@
-/*
- весь дизайн - черновик иишный, чтобы смотреть на сайт возможно было
-*/
-
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Reflection.Metadata;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // аутентификация с помощью куки
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -57,6 +56,8 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
+app.UseStaticFiles();
 app.UseAuthentication();   // добавление middleware аутентификации 
 app.UseAuthorization();   // добавление middleware авторизации 
 //инициализация бд
@@ -69,123 +70,68 @@ using (var scope = app.Services.CreateScope())
 app.MapGet("/", async (HttpContext context) =>
 {
     bool isLoggedIn = context.User.Identity?.IsAuthenticated == true;
-    string userName = context.User.Identity?.Name ?? ""; //достаем типа из куки
+    string userName = context.User.Identity?.Name ?? "";
 
-    /*зависит зареган или нет*/
-    string welcomeMessage = isLoggedIn ? $"<h3 style=\"margin:0; color:white;\">Привет, {userName}! Выберете викторину для прохождения</h3>" : "<h3 style=\"margin:0; color:white;\">Вы не авторизованы. Войдите или зарегистрируйтесь, чтобы начать</h3>";
+    string welcomeMessage = isLoggedIn ? $"Hello, {userName}!" : "Welcome!";
 
-    string buttonsHtml = ""; //все кнопки на странице, тоже зависят от того, вошел пользователь или нет(потом добавим в общ HTML)
+    string buttonsHtml = "";
     if (isLoggedIn)
     {
         buttonsHtml = @"
-                        <form method=""get"" action=""/quizzes"">
-                            <button type=""submit"" class=""shop-btn"">Викторинки</button>
-                        </form>
-                        <form method=""get"" action=""/leaderboard"">
-                            <button type=""submit"" class=""shop-btn"">Список лидеров</button>
-                        </form>
-                        <form method=""get"" action=""/profile"">
-                            <button type=""submit"">Личный кабинет</button>
-                        </form>
-                        <form method=""post"" action=""/logout"">
-                            <button type=""submit"" class=""logout-btn"">Выйти</button>
-                        </form>";
+            <form method=""get"" action=""/quizzes"">
+                <button type=""submit"" class=""btn shop-btn"">Викторинки</button>
+            </form>
+            <form method='get' action='/create-quiz'>
+                <button type=""submit"" class=""btn shop-btn"">Создать викторину</button>
+            </form>
+            <form method=""get"" action=""/leaderboard"">
+                <button type=""submit"" class=""btn shop-btn"">Список лидеров</button>
+            </form>
+            <form method=""get"" action=""/profile"">
+                <button type=""submit"" class=""btn shop-btn"">Личный кабинет</button>
+            </form>
+            <form method=""post"" action=""/logout"">
+                <button type=""submit"" class=""btn logout-btn"">Выйти</button>
+            </form>";
     }
     else
     {
         buttonsHtml = @"
-                        <form method=""get"" action=""/login"">
-                            <button type=""submit"">Войти</button>
-                        </form>
-                        <form method=""get"" action=""/register"">
-                            <button type=""submit"">Регистрация</button>
-                        </form>";
+            <form method=""get"" action=""/register"">
+                <button type=""submit"" class=""btn btn_signin"">Sign in →</button>
+            </form>
+            <form method=""get"" action=""/login"">
+                <button type=""submit"" class=""btn btn_login"">Log in →</button>
+            </form>";
     }
 
     string html = $@"
     <!DOCTYPE html>
     <html>
         <head>
-            <title>Пикме викторинкеес</title>
-            <meta charset=""UTF-8"">
-            <style>
-                * {{
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }}
-
-                body {{
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    min-height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }}
-
-                .container {{
-                    background: white;
-                    border-radius: 20px;
-                    padding: 40px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    max-width: 500px;
-                    width: 100%;
-                    text-align: center;
-                }}
-
-                h1 {{
-                    color: #333;
-                    font-size: 2.5em;
-                    margin-bottom: 15px;
-                    border-bottom: 3px solid #667eea;
-                    display: inline-block;
-                    padding-bottom: 10px;
-                }}
-
-                .welcome-message {{
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 15px;
-                    border-radius: 15px;
-                    margin: 20px 0;
-                }}
-
-                p {{
-                    color: #666;
-                    font-size: 1.2em;
-                    margin: 20px 0;
-                    line-height: 1.6;
-                }}
-
-                button {{
-                    width: 100%;
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    padding: 14px;
-                    font-size: 1.1em;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    font-weight: 600;
-                    margin-top: 10px;
-                }}
-            </style>
+            <title>Starter Page</title>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <link rel='stylesheet' href='/css/style.css'>
         </head>
         <body>
-            <div class=""container"">
-                <h1>Добро пожаловать!</h1>
-                
-                <div class=""welcome-message"">
-                    {welcomeMessage}
+        <div class=""starter-container"">
+            <div class=""split-layout"">
+                <div class=""left-side"">
+                    
                 </div>
-                
-                <div class=""button-group"">
-                    {buttonsHtml}
+
+                <div class=""right-side"">
+                    <div class=""welcome"">
+                        <div class=""welcome_title""> {welcomeMessage} </div>
+                        <div class=""welcome_sub"">🏵</div>
+                    </div>
+                    <div class=""buttons-stack"">
+                        {buttonsHtml}
+                    </div>
                 </div>
             </div>
+        </div>
         </body>
     </html>";
 
@@ -199,90 +145,38 @@ app.MapGet("/register", () =>
     <!DOCTYPE html>
     <html>
         <head>
-            <title>Регистрация</title>
-            <meta charset=""UTF-8"">
-            <style>
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }
-                .container {
-                    background: white;
-                    border-radius: 20px;
-                    padding: 40px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    max-width: 450px;
-                    width: 100%;
-                }
-                h1 {
-                    color: #333;
-                    text-align: center;
-                    margin-bottom: 30px;
-                    border-bottom: 3px solid #667eea;
-                    display: inline-block;
-                    width: 100%;
-                    padding-bottom: 10px;
-                }
-                .form-group {
-                    margin-bottom: 20px;
-                }
-                label {
-                    display: block;
-                    margin-bottom: 8px;
-                    color: #333;
-                    font-weight: 500;
-                }
-                input {
-                    width: 100%;
-                    padding: 12px;
-                    border: 2px solid #e0e0e0;
-                    border-radius: 10px;
-                    font-size: 1em;
-                    transition: all 0.3s ease;
-                }
-                button {
-                    width: 100%;
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    padding: 14px;
-                    font-size: 1.1em;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    font-weight: 600;
-                    margin-top: 10px;
-                }
-            </style>
+            <title>Registration</title>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <link rel='stylesheet' href='/css/style.css'>
         </head>
         <body>
             <div class=""container"">
-                <h1>Регистрация</h1>
+                <h1>⋆.࿔🌸 Registration *:･</h1>
                 <form method=""post"" action=""/register"">
+
                     <div class=""form-group"">
-                        <label>Логин:</label>
-                        <input type=""text"" name=""login"" required minlength=""3"" />
+                        <input type=""text"" name=""login"" id=""login"" required minlength=""3"" placeholder="" "" />
+                        <label for=""login"">login:</label>
+                        <div class=""input-note""></div>
                     </div>
+
                     <div class=""form-group"">
-                        <label>Пароль:</label>
-                        <input type=""password"" name=""password"" required minlength=""4"" />
+                        <input type=""password"" name=""password"" id=""password"" required minlength=""4"" placeholder="" "" />
+                        <label for=""password"">password:</label>
+                        <div class=""input-note""></div>
                     </div>
+
                     <div class=""form-group"">
-                        <label>Подтверждение пароля:</label>
-                        <input type=""password"" name=""confirm_password"" required />
+                        <input type=""password"" name=""confirm_password"" id=""confirm_password"" required placeholder="" "" />
+                        <label for=""confirm_password"">password confirmation:</label>
+                        <div class=""input-note""></div>
                     </div>
-                    <button type=""submit"">Зарегистрироваться</button>
+
+                    <button type=""submit"">sign in</button>
+
                 </form>
-                <a href=""/"" class=""back-link"">Вернуться на главную</a>
+                <a href=""/"" class=""back-link"">return</a>
             </div>
         </body>
     </html>";
@@ -307,62 +201,19 @@ app.MapPost("/register", async (HttpContext context, AppDbContext db) =>
         html = $@"
         <!DOCTYPE html>
         <html>
-            <head>
-                <title>Ошибка регистрации. Такой пользователь уже существует</title>
-                <meta charset=""UTF-8"">
-                <style>
-                    * {{
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }}
-                    body {{
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }}
-                    .container {{
-                        background: white;
-                        border-radius: 20px;
-                        padding: 40px;
-                        text-align: center;
-                        max-width: 500px;
-                        width: 100%;
-                        margin: 20px;
-                    }}
-                    h1 {{
-                        color: #dc3545;
-                        margin-bottom: 20px;
-                        border-bottom: 2px solid #dc3545;
-                        display: inline-block;
-                        padding-bottom: 10px;
-                    }}
-                    p {{
-                        color: #666;
-                        margin: 20px 0;
-                        font-size: 1.1em;
-                    }}
-                    .button {{
-                        display: inline-block;
-                        background: #667eea;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        margin: 10px;
-                        transition: all 0.3s ease;
-                    }}
-                </style>
+        <head>
+             <title>Ошибка регистрации. Такой пользователь уже существует</title>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <link rel='stylesheet' href='/css/style.css'>
             </head>
             <body>
                 <div class=""container"">
-                    <h1>Ошибка регистрации</h1>
+                    <h1>❀  Ошибка регистрации  ❀</h1>
                     <p>Пользователь с логином <strong>'{login}'</strong> уже существует</p>
                     <p>Используйте другой логин или войдите в существующий аккаунт</p>
-                    <a href=""/register"" class=""button"">Попробовать снова</a>
-                    <a href=""/login"" class=""button"">Войти</a>
+                    <a href=""/register"" class=""button"">попробовать снова</a>
+                    <a href=""/login"" class=""button"">войти</a>
                 </div>
             </body>
         </html>";
@@ -374,59 +225,16 @@ app.MapPost("/register", async (HttpContext context, AppDbContext db) =>
         <html>
             <head>
                 <title>Ошибка регистрации. Пароли не совпадают</title>
-                <meta charset=""UTF-8"">
-                <style>
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                    .container {
-                        background: white;
-                        border-radius: 20px;
-                        padding: 40px;
-                        text-align: center;
-                        max-width: 500px;
-                        width: 100%;
-                        margin: 20px;
-                    }
-                    h1 {
-                        color: #dc3545;
-                        margin-bottom: 20px;
-                        border-bottom: 2px solid #dc3545;
-                        display: inline-block;
-                        padding-bottom: 10px;
-                    }
-                    p {
-                        color: #666;
-                        margin: 20px 0;
-                        font-size: 1.1em;
-                    }
-                    .button {
-                        display: inline-block;
-                        background: #667eea;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        margin: 10px;
-                        transition: all 0.3s ease;
-                    }
-                </style>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <link rel='stylesheet' href='/css/style.css'>
             </head>
             <body>
                 <div class=""container"">
-                    <h1>Ошибка регистрации</h1>
-                    <p>Введенные пароли не совпадают!</p>
+                    <h1>❀  Ошибка регистрации  ❀</h1>
+                    <p>Введенные пароли <strong>не совпадают</strong>!</p>
                     <p>Пожалуйста, убедитесь, что пароль и подтверждение пароля одинаковые.</p>
-                    <a href=""/register"" class=""button"">Попробовать снова</a>
+                    <a href=""/register"" class=""button"">попробовать снова</a>
                 </div>
             </body>
         </html>";
@@ -442,68 +250,22 @@ app.MapPost("/register", async (HttpContext context, AppDbContext db) =>
         <!DOCTYPE html>
         <html>
             <head>
-                <title>Регистрация без ошибок</title>
+                <title>Регистрация успешна</title>
                 <meta charset=""UTF-8"">
-                <style>
-                    * {{
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }}
-                    body {{
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }}
-                    .container {{
-                        background: white;
-                        border-radius: 20px;
-                        padding: 40px;
-                        text-align: center;
-                        max-width: 500px;
-                        width: 100%;
-                        margin: 20px;
-                    }}
-                    h1 {{
-                        color: #28a745;
-                        margin-bottom: 20px;
-                        border-bottom: 2px solid #28a745;
-                        display: inline-block;
-                        padding-bottom: 10px;
-                    }}
-                    p {{
-                        color: #666;
-                        margin: 20px 0;
-                        font-size: 1.1em;
-                    }}
-                    .button {{
-                        display: inline-block;
-                        background: #667eea;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        margin: 10px;
-                        transition: all 0.3s ease;
-                    }}
-                    .button:hover {{
-                        background: #764ba2;
-                        transform: translateY(-2px);
-                    }}
-                </style>
+                 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                 <link rel='stylesheet' href='/css/style.css'>
             </head>
             <body>
                 <div class=""container"">
-                    <h1>Регистрация успешна!</h1>
+                    <h1>✿  Регистрация успешна!  ✿</h1>
                     <p>Пользователь <strong>{login}</strong> успешно зарегистрирован!</p>
                     <p>Теперь вы можете войти в свой аккаунт.</p>
-                    <a href=""/login"" class=""button"">Войти в аккаунт</a>
-                    <a href=""/"" class=""button"">На главную</a>
+                    <a href=""/login"" class=""button"">войти в аккаунт</a>
+                    <a href=""/"" class=""button"">на главную</a>
                 </div>
             </body>
         </html>";
+
     }
 
     return Results.Content(html, "text/html; charset=utf-8");
@@ -516,92 +278,28 @@ app.MapGet("/login", () =>
     <html>
         <head>
             <title>Вход</title>
-            <meta charset=""UTF-8"">
-            <style>
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }
-                .container {
-                    background: white;
-                    border-radius: 20px;
-                    padding: 40px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    max-width: 450px;
-                    width: 100%;
-                }
-                h1 {
-                    color: #333;
-                    text-align: center;
-                    margin-bottom: 30px;
-                    border-bottom: 3px solid #667eea;
-                    display: inline-block;
-                    width: 100%;
-                    padding-bottom: 10px;
-                }
-                .form-group {
-                    margin-bottom: 20px;
-                }
-                label {
-                    display: block;
-                    margin-bottom: 8px;
-                    color: #333;
-                    font-weight: 500;
-                }
-                input {
-                    width: 100%;
-                    padding: 12px;
-                    border: 2px solid #e0e0e0;
-                    border-radius: 10px;
-                    font-size: 1em;
-                    transition: all 0.3s ease;
-                }
-                button {
-                    width: 100%;
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    padding: 14px;
-                    font-size: 1.1em;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    font-weight: 600;
-                    margin-top: 10px;
-                }
-                .back-link {
-                    display: block;
-                    text-align: center;
-                    margin-top: 20px;
-                    color: #667eea;
-                    text-decoration: none;
-            </style>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <link rel='stylesheet' href='/css/style.css'>
         </head>
         <body>
             <div class=""container"">
-                <h1>Вход в аккаунт</h1>
+                <h1>⋆.࿔🌸 Log in *:･</h1>
                 <form method=""post"" action=""/login"">
                     <div class=""form-group"">
-                        <label>Логин:</label>
-                        <input type=""text"" name=""login"" required />
+                        <input type=""text"" name=""login"" id=""login"" required placeholder="" "" />
+                        <label for=""login"">login:</label>
                     </div>
                     <div class=""form-group"">
-                        <label>Пароль:</label>
-                        <input type=""password"" name=""password"" required />
+                        <input type=""password"" name=""password"" id=""password"" required placeholder="" "" />
+                        <label for=""password"">password:</label>
                     </div>
                     <button type=""submit"">Войти</button>
                 </form>
-                <a href=""/"" class=""back-link"">← Вернуться на главную</a>
-                <a href=""/register"" class=""back-link"">Нет аккаунта? Зарегистрироваться</a>
+                <div class=""links-container"">
+                    <a href=""/"" class=""back-link"">return</a>
+                    <a href=""/register"" class=""back-link"">no acc? let's create</a>
+                </div>
             </div>
         </body>
     </html>";
@@ -624,70 +322,29 @@ app.MapPost("/login", async (HttpContext context, AppDbContext db) =>
         html = @"
         <!DOCTYPE html>
         <html>
-            <head>
-                <title>Ошибка входа</title>
-                <meta charset=""UTF-8"">
-                <style>
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                    .container {
-                        background: white;
-                        border-radius: 20px;
-                        padding: 40px;
-                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                        max-width: 500px;
-                        width: 100%;
-                        text-align: center;
-                    }
-                    h1 {
-                        color: #dc3545;
-                        margin-bottom: 20px;
-                        border-bottom: 2px solid #dc3545;
-                        display: inline-block;
-                        padding-bottom: 10px;
-                    }
-                    .content {
-                        margin-top: 30px;
-                    }
-                    p {
-                        color: #666;
-                        margin: 15px 0;
-                        line-height: 1.6;
-                    }
-                    .button {
-                        display: inline-block;
-                        background: #667eea;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        margin: 10px;
-                        transition: all 0.3s ease;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class=""container"">
-                    <h1>Ошибка входа</h1>
-                    <div class=""content"">
-                        <p>Неверный логин или пароль!</p>
-                        <p>Пожалуйста, проверьте правильность введенных данных.</p>
+        <head>
+            <title>Ошибка входа</title>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <link rel='stylesheet' href='/css/style.css'>
+        </head>
+        <body>
+            <div class=""container"">
+                <div class=""error-icon"">⚠️</div>
+                <h1>Ошибка входа</h1>
+                <div class=""content"">
+                    <div class=""error-message"">
+                        <p style=""margin: 0;"">❌ Неверный логин или пароль!</p>
+                    </div>
+                    <p>Пожалуйста, проверьте правильность введенных данных.</p>
+                    <div class=""buttons-container"">
                         <a href=""/login"" class=""button"">Попробовать снова</a>
                         <a href=""/register"" class=""button"">Зарегистрироваться</a>
                     </div>
                 </div>
-            </body>
-        </html>";
+            </div>
+        </body>
+    </html>";
     }
     else //нашли
     {
@@ -696,71 +353,25 @@ app.MapPost("/login", async (HttpContext context, AppDbContext db) =>
         <!DOCTYPE html>
         <html>
             <head>
-                <title>Вход без ошибко</title>
-                <meta charset=""UTF-8"">
-                <style>
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                    .container {
-                        background: white;
-                        border-radius: 20px;
-                        padding: 40px;
-                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                        max-width: 500px;
-                        width: 100%;
-                        text-align: center;
-                    }
-                    h1 {
-                        color: #28a745;
-                        margin-bottom: 20px;
-                        border-bottom: 2px solid #28a745;
-                        display: inline-block;
-                        padding-bottom: 10px;
-                    }
-                    .content {
-                        margin-top: 30px;
-                    }
-                    p {
-                        color: #666;
-                        margin: 15px 0;
-                        line-height: 1.6;
-                    }
-                    .button {
-                        display: inline-block;
-                        background: #667eea;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 25px;
-                        margin: 10px;
-                        transition: all 0.3s ease;
-                    }
-                    .button:hover {
-                        background: #764ba2;
-                        transform: translateY(-2px);
-                    }
-                </style>
+                <title>Вход выполнен успешно</title>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <link rel='stylesheet' href='/css/style.css'>
             </head>
             <body>
                 <div class=""container"">
+                    <div class=""success-icon"">✅</div>
                     <h1>Вход выполнен успешно!</h1>
                     <div class=""content"">
-                        <p>Здравствуйте, " + user.Login + @"!</p>
+                        <div class=""welcome-message"">
+                            <p style=""margin: 0;"">🌸 Здравствуйте, " + user.Login + @"! 🌸</p>
+                        </div>
                         <a href=""/"" class=""button"">На главную</a>
                     </div>
                 </div>
             </body>
         </html>";
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Login),
@@ -773,7 +384,7 @@ app.MapPost("/login", async (HttpContext context, AppDbContext db) =>
         await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
 
         return Results.Redirect("/");
-    }   
+    }
     return Results.Content(html, "text/html; charset=utf-8");
 });
 
@@ -793,34 +404,10 @@ app.MapGet("/profile", async (HttpContext context, AppDbContext db) =>
         string html = """
         <!DOCTYPE html>
         <html>
-            <head><title>Личный кабинет(не выполнен вход в акк)</title><meta charset="UTF-8">
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .container {
-                    background: white;
-                    border-radius: 20px;
-                    padding: 40px;
-                    text-align: center;
-                }
-                h1 { color: #dc3545; margin-bottom: 20px; }
-                p { color: #666; margin-bottom: 20px; }
-                a {
-                    background: #667eea;
-                    color: white;
-                    text-decoration: none;
-                    padding: 12px 24px;
-                    border-radius: 25px;
-                    display: inline-block;
-                }
-                a:hover { background: #764ba2; }
-            </style>
+            <head><title>Личный кабинет(не выполнен вход в акк)</title>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <link rel='stylesheet' href='/css/style.css'>
             </head>
             <body>
                 <div class="container">
@@ -842,122 +429,61 @@ app.MapGet("/profile", async (HttpContext context, AppDbContext db) =>
     <html>
         <head>
             <title>Личный кабинет</title>
-            <meta charset="UTF-8">
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }
-                .container {
-                    background: white;
-                    border-radius: 20px;
-                    padding: 40px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    max-width: 500px;
-                    width: 100%;
-                    text-align: center;
-                }
-                h1 {
-                    color: #333;
-                    margin-bottom: 30px;
-                    border-bottom: 3px solid #667eea;
-                    display: inline-block;
-                    padding-bottom: 10px;
-                }
-                .info-card {
-                    background: #f8f9ff;
-                    border-radius: 15px;
-                    padding: 25px;
-                    margin: 20px 0;
-                    border: 2px solid #667eea;
-                }
-                .info-item {
-                    margin: 15px 0;
-                    padding: 10px;
-                    border-bottom: 1px solid #e0e0e0;
-                }
-                .info-label {
-                    font-weight: bold;
-                    color: #667eea;
-                }
-                .info-value {
-                    color: #333;
-                    margin-top: 5px;
-                    font-size: 1.2em;
-                }
-                .button-group {
-                    display: flex;
-                    gap: 15px;
-                    justify-content: center;
-                    margin-top: 20px;
-                }
-                button, a.button {
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    padding: 12px 24px;
-                    font-size: 1em;
-                    border-radius: 50px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    display: inline-block;
-                    transition: all 0.3s ease;
-                }
-                button:hover, a.button:hover {
-                    background: #764ba2;
-                    transform: translateY(-2px);
-                }
-                .logout-btn {
-                    background: #dc3545;
-                }
-                .logout-btn:hover {
-                    background: #c82333;
-                }
-            </style>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <link rel='stylesheet' href='/css/style.css'>
         </head>
         <body>
-            <div class="container">
-                <h1>Личный кабинет</h1>
-                
-                <div class="info-card">
-                    <div class="info-item">
-                        <div class="info-label">Логин:</div>
-                        <div class="info-value">{{userName}}</div>
+            <div class="container profile-container">
+                <h1>🌸 Личный кабинет 🌸</h1>
+
+                <div class="profile-wrapper">
+                    <!-- Левая часть с аватаром -->
+                    <div class="profile-left">
+                        <div class="avatar">
+                            🌸
+                        </div>
+                        <div class="username">{{userName}}</div>
+                        <div class="user-id">
+                            🆔 ID: {{user!.Id}}
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">ID пользователя:</div>
-                        <div class="info-value">{{user!.Id}}</div>
+
+                    <!-- Правая часть со статистикой -->
+                    <div class="profile-right">
+                        <div class="stats-card">
+                            <h3>Моя статистика</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">📊 Пройденные викторины</div>
+                                    <div class="stat-value">{{user.QuizzesPassed}} <span class="stat-unit">шт.</span></div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">✏️ Созданные викторины</div>
+                                    <div class="stat-value">{{user.QuizzesCreated}} <span class="stat-unit">шт.</span></div>
+                                </div>
+                                <div class="stat-item stat-item-large">
+                                    <div class="stat-label stat-label-large">🏆 Лучший счет</div>
+                                    <div class="stat-value stat-value-large">{{user.BestScore}} <span class="stat-unit">очков</span></div>
+                                </div>
+                            </div>
+                            <div class="stats-footer">
+                                ✨ Продолжай в том же духе! ✨
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <div class="info-item">
-                        <div class="info-label">Количество пройденных викторин:</div>
-                        <div class="info-value">{{user.QuizzesPassed}}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Количество созданных викторин:</div>
-                        <div class="info-value">{{user.QuizzesCreated}}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Лучший счет:</div>
-                        <div class="info-value">{{user.BestScore}}</div>
-                    </div>
-                </div>
+
+                <!-- Кнопки внизу -->
                 <div class="button-group">
-                    <form method="post" action="/leaderboard" style="display: inline;">
-                        <button type="submit"">Список лидеров</button>
-                    </form>
+                    <a href="/leaderboard" class="button">🏅 Список лидеров</a>
+                <form method='get' action='/create-quiz'>
+                     <button type='submit' class='shop-btn'>➕ Создать викторину</button>
+                </form>
                     <form method="post" action="/logout" style="display: inline;">
-                        <button type="submit" class="logout-btn">Выйти</button>
+                        <button type="submit" class="logout-btn">🚪 Выйти</button>
                     </form>
-                </div>
-                <div style="margin-top: 15px;">
-                    <a href="/" class="button" style="background: #6c757d;">На главную</a>
+                    <a href="/" class="button home-btn">🏠 На главную</a>
                 </div>
             </div>
         </body>
@@ -989,15 +515,16 @@ app.MapGet("/quizzes", async (AppDbContext db, HttpContext context) =>
         defquizzesHtml += $@"
         <a href='/quiz/{quiz.Id}' class='quiz-card-link'>
             <div class='quiz-card'>
+                <div class='quiz-badge official'>Официальная</div>
                 <h3>{quiz.Title}</h3>
                 <p>{quiz.Description ?? "Описание отсутствует"}</p>
                 <div class='quiz-stats'>
-                    <span>{quiz.QuestionsCount} вопросов</span>
-                    <span>{quiz.TotalPoints} баллов</span>
-                    <span>{quiz.TimesPlayed} игр</span>
-                    <span>Средний балл: {quiz.AverageScore}%</span>
+                    <span>📋 {quiz.QuestionsCount} вопросов</span>
+                    <span>⭐ {quiz.TotalPoints} баллов</span>
+                    <span>🎮 {quiz.TimesPlayed} игр</span>
+                    <span>📊 Средний балл: {quiz.AverageScore}%</span>
                 </div>
-                <div class='quiz-creator'>Автор: Админко</div>
+                <div class='quiz-creator'>👑 Автор: Админко</div>
             </div>
         </a>";
     }
@@ -1017,307 +544,430 @@ app.MapGet("/quizzes", async (AppDbContext db, HttpContext context) =>
         customquizzesHtml += $@"
         <a href='/quiz/{quiz.Id}' class='quiz-card-link'>
             <div class='quiz-card'>
-                <div class='quiz-badge'>Пользовательская</div>
+                <div class='quiz-badge user'>👤 Пользовательская</div>
                 <h3>{quiz.Title}</h3>
                 <p>{quiz.Description ?? "Описание отсутствует"}</p>
                 <div class='quiz-stats'>
-                    <span>{quiz.QuestionsCount} вопросов</span>
-                    <span>{quiz.TotalPoints} баллов</span>
-                    <span>{quiz.TimesPlayed} игр</span>
+                    <span>📋 {quiz.QuestionsCount} вопросов</span>
+                    <span>⭐ {quiz.TotalPoints} баллов</span>
+                    <span>🎮 {quiz.TimesPlayed} игр</span>
                 </div>
                 <div class='quiz-creator'>
-                    Автор: {creatorName}
+                    ✍️ Автор: {creatorName}
                 </div>
             </div>
         </a>";
     }
-
+    customquizzesHtml += $@"
+        <form method='get' action='/create-quiz'>
+            <button type='submit' class='shop-btn'>➕ Создать викторину</button>
+        </form> 
+";
     //если нет пользовательских викторин
     if (string.IsNullOrEmpty(customquizzesHtml))
     {
         customquizzesHtml = $@"
         <div class='empty-state'>
-            <p>Пока нет пользовательских викторин</p>
+            <p>😔 Пока нет пользовательских викторин</p>
+            <p style='margin-top: 10px; font-size: 0.9em;'>Станьте первым создателем!</p>
+            <form method='get' action='/create-quiz'>
+                <button type='submit' class='shop-btn'>➕ Создать викторину</button>
+            </form>
         </div>";
     }
     string html = $@"
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Деф викторинки</title>
+        <title>Викторины</title>
         <meta charset='UTF-8'>
         <style>
-    * {{
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }}
-    
-    body {{
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: white;
-        color: black;
-        padding: 40px;
-    }}
-    
-    .container {{
-        max-width: 1200px;
-        margin: 0 auto;
-    }}
-    
-    /* Заголовки */
-    h1 {{
-        font-size: 2.5em;
-        margin-bottom: 20px;
-        border-bottom: 3px solid black;
-        display: inline-block;
-    }}
-    
-    h2 {{
-        font-size: 1.8em;
-        margin: 30px 0 20px 0;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 5px;
-    }}
-    
-    /* Навигация */
-    .nav-buttons {{
-        text-align: center;
-        margin-bottom: 40px;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 20px;
-    }}
-    
-    .nav-btn {{
-        background: black;
-        color: white;
-        text-decoration: none;
-        padding: 8px 16px;
-        margin: 0 5px;
-        display: inline-block;
-        font-family: monospace;
-        border: 1px solid black;
-    }}
-    
-    .nav-btn:hover {{
-        background: white;
-        color: black;
-    }}
-    
-    /* Кнопки */
-    button, .button {{
-        background: black;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
-        font-family: monospace;
-        font-size: 1em;
-        display: inline-block;
-        text-decoration: none;
-    }}
-    
-    button:hover, .button:hover {{
-        background: #333;
-    }}
-    
-    /* Формы */
-    input, textarea, select {{
-        width: 100%;
-        padding: 8px;
-        margin: 5px 0 15px 0;
-        border: 1px solid black;
-        font-family: monospace;
-        background: white;
-    }}
-    
-    label {{
-        font-weight: bold;
-    }}
-    
-    /* Карточки викторин */
-    .quiz-grid {{
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-        margin: 20px 0;
-    }}
-    
-    .quiz-card {{
-        border: 1px solid black;
-        padding: 20px;
-        background: white;
-    }}
-    
-    .quiz-card:hover {{
-        background: #f5f5f5;
-    }}
-    
-    .quiz-card-link {{
-        text-decoration: none;
-        color: black;
-    }}
-    
-    .quiz-badge {{
-        display: inline-block;
-        padding: 4px 8px;
-        margin-bottom: 10px;
-        font-size: 0.8em;
-        font-weight: bold;
-    }}
-    
-    .quiz-badge.official {{
-        background: black;
-        color: white;
-    }}
-    
-    .quiz-badge.user {{
-        background: #ccc;
-        color: black;
-    }}
-    
-    .quiz-stats {{
-        margin: 10px 0;
-        font-size: 0.9em;
-        color: #555;
-    }}
-    
-    .quiz-stats span {{
-        margin-right: 15px;
-    }}
-    
-    .quiz-creator {{
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid #ccc;
-        font-size: 0.85em;
-        color: #777;
-    }}
-     .custom-quizzes {{
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid #ccc;
-    }}
-    /* Блоки вопросов */
-    .question-block {{
-        border: 1px solid black;
-        padding: 20px;
-        margin-bottom: 20px;
-        background: white;
-    }}
-    
-    .question-header {{
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-        padding-bottom: 5px;
-        border-bottom: 1px solid black;
-    }}
-    
-    .question-num {{
-        font-weight: bold;
-    }}
-    
-    .question-points {{
-        color: black;
-        font-weight: bold;
-    }}
-    
-    .question-text {{
-        margin-bottom: 15px;
-    }}
-    
-    .answers {{
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }}
-    
-    .answer-option {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }}
-    
-    input[type=""radio""] {{
-        width: auto;
-        margin: 0;
-    }}
-    
-    /* Результат */
-    .result-box {{
-        border: 1px solid black;
-        padding: 40px;
-        text-align: center;
-        margin: 40px 0;
-    }}
-    
-    .score {{
-        font-size: 48px;
-        font-weight: bold;
-        margin: 20px 0;
-    }}
-    
-    /* Пустое состояние */
-    .empty-state {{
-        border: 1px solid #ccc;
-        padding: 60px;
-        text-align: center;
-        color: #777;
-    }}
-    
-    /* Форма создания викторины */
-    .form-group {{
-        margin-bottom: 20px;
-    }}
-    
-    /* Профиль */
-    .info-card {{
-        border: 1px solid black;
-        padding: 20px;
-        margin: 20px 0;
-    }}
-    
-    .info-item {{
-        margin: 10px 0;
-        padding: 5px 0;
-        border-bottom: 1px solid #eee;
-    }}
-    
-    .info-label {{
-        font-weight: bold;
-        width: 150px;
-        display: inline-block;
-    }}
-    
-    .button-group {{
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-    }}
-    
-    @media (max-width: 600px) {{
-        body {{ padding: 20px; }}
-        .quiz-grid {{ grid-template-columns: 1fr; }}
-        .button-group {{ flex-direction: column; }}
-        .info-label {{ width: 100%; display: block; margin-bottom: 5px; }}
-    }}
-</style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+
+            body {{
+                font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+                background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%);
+                color: #2d2d2d;
+                padding: 2rem;
+                min-height: 100vh;
+            }}
+
+            .container {{
+                max-width: 1300px;
+                margin: 0 auto;
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: blur(10px);
+                border-radius: 2rem;
+                padding: 2rem;
+                box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.4);
+            }}
+
+            /* Заголовки */
+            h1 {{
+                font-size: 2.2rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                margin-bottom: 1.5rem;
+                border-bottom: 3px solid #ffb6c1;
+                display: inline-block;
+                padding-bottom: 0.3rem;
+            }}
+
+            h2 {{
+                font-size: 1.6rem;
+                font-weight: 600;
+                color: #ff6d9e;
+                margin: 2rem 0 1rem 0;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid rgba(255, 109, 158, 0.3);
+            }}
+
+            /* Навигация */
+            .nav-buttons {{
+                text-align: center;
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid rgba(255, 109, 158, 0.2);
+                display: flex;
+                gap: 0.8rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }}
+
+            .nav-btn {{
+                background: white;
+                color: #ff6d9e;
+                text-decoration: none;
+                padding: 0.6rem 1.2rem;
+                border-radius: 60px;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                border: 1px solid #ffb6c1;
+                backdrop-filter: blur(5px);
+            }}
+
+            .nav-btn:hover {{
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                color: white;
+                transform: translateY(-2px);
+                border-color: transparent;
+                box-shadow: 0 5px 15px rgba(255, 109, 158, 0.3);
+            }}
+
+            /* Кнопки */
+            button, .button {{
+                background: white;
+                color: #ff6d9e;
+                border: 1.5px solid #ffb6c1;
+                padding: 0.6rem 1.2rem;
+                border-radius: 60px;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 0.9rem;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+            }}
+
+            button:hover, .button:hover {{
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                border-color: transparent;
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 12px rgba(255, 109, 158, 0.3);
+            }}
+
+            /* Формы */
+            input, textarea, select {{
+                width: 100%;
+                padding: 0.7rem;
+                margin: 0.3rem 0 1rem 0;
+                border: 1.5px solid #ffd0dc;
+                border-radius: 1rem;
+                font-family: inherit;
+                background: white;
+                transition: all 0.3s ease;
+            }}
+
+            input:focus, textarea:focus, select:focus {{
+                outline: none;
+                border-color: #ff6d9e;
+                box-shadow: 0 0 0 3px rgba(255, 109, 158, 0.1);
+            }}
+
+            label {{
+                font-weight: 600;
+                color: #ff6d9e;
+                margin-top: 0.5rem;
+                display: block;
+            }}
+
+            /* Карточки викторин */
+            .quiz-grid {{
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 1.5rem;
+                margin: 1.5rem 0;
+            }}
+
+            .quiz-card {{
+                background: white;
+                border-radius: 1.5rem;
+                padding: 1.5rem;
+                transition: all 0.3s cubic-bezier(0.53, 0.01, 0.35, 1.5);
+                border: 1px solid rgba(255, 109, 158, 0.2);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }}
+
+            .quiz-card:hover {{
+                transform: translateY(-8px);
+                border-color: #ff6d9e;
+                box-shadow: 0 20px 30px -12px rgba(255, 109, 158, 0.25);
+            }}
+
+            .quiz-card-link {{
+                text-decoration: none;
+                color: inherit;
+            }}
+
+            .quiz-card h3 {{
+                font-size: 1.3rem;
+                color: #ff6d9e;
+                margin-bottom: 0.5rem;
+                font-weight: 600;
+            }}
+
+            .quiz-card p {{
+                color: #666;
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+                line-height: 1.4;
+                flex-grow: 1;
+            }}
+
+            .quiz-badge {{
+                display: inline-block;
+                padding: 0.2rem 0.8rem;
+                border-radius: 60px;
+                font-size: 0.7rem;
+                font-weight: 600;
+                margin-bottom: 0.8rem;
+                width: fit-content;
+            }}
+
+            .quiz-badge.official {{
+                background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+                color: white;
+            }}
+
+            .quiz-badge.user {{
+                background: #f0f0f0;
+                color: #ff6d9e;
+                border: 1px solid #ffb6c1;
+            }}
+
+            .quiz-stats {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin: 0.8rem 0;
+                font-size: 0.75rem;
+                color: #888;
+            }}
+
+            .quiz-stats span {{
+                background: rgba(255, 109, 158, 0.05);
+                padding: 0.2rem 0.6rem;
+                border-radius: 60px;
+            }}
+
+            .quiz-creator {{
+                margin-top: 0.8rem;
+                padding-top: 0.8rem;
+                border-top: 1px solid #ffe0e8;
+                font-size: 0.75rem;
+                color: #ff9eb5;
+                font-weight: 500;
+            }}
+
+            .custom-quizzes {{
+                margin-top: 2rem;
+            }}
+
+            /* Блоки вопросов */
+            .question-block {{
+                background: white;
+                border-radius: 1.5rem;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                border: 1px solid rgba(255, 109, 158, 0.15);
+                transition: all 0.3s ease;
+            }}
+
+            .question-block:hover {{
+                border-color: #ffb6c1;
+                box-shadow: 0 5px 15px rgba(255, 109, 158, 0.05);
+            }}
+
+            .question-header {{
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid #ffe0e8;
+            }}
+
+            .question-num {{
+                font-weight: 700;
+                color: #ff6d9e;
+            }}
+
+            .question-points {{
+                font-weight: 700;
+                color: #ffb6c1;
+            }}
+
+            .question-text {{
+                margin-bottom: 1.2rem;
+                font-size: 1.05rem;
+                font-weight: 500;
+                color: #2d2d2d;
+            }}
+
+            .answers {{
+                display: flex;
+                flex-direction: column;
+                gap: 0.8rem;
+            }}
+
+            .answer-option {{
+                display: flex;
+                align-items: center;
+                gap: 0.8rem;
+                padding: 0.6rem;
+                border-radius: 1rem;
+                background: #fefafc;
+                border: 1px solid #ffe0e8;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }}
+
+            .answer-option:hover {{
+                background: #fff5f8;
+                border-color: #ffb6c1;
+            }}
+
+            input[type='radio'] {{
+                width: 1.2rem;
+                height: 1.2rem;
+                accent-color: #ff6d9e;
+                margin: 0;
+            }}
+
+            /* Результат */
+            .result-box {{
+                background: white;
+                border-radius: 1.5rem;
+                padding: 2rem;
+                text-align: center;
+                margin: 2rem 0;
+                border: 2px solid #ffb6c1;
+            }}
+
+            .score {{
+                font-size: 3rem;
+                font-weight: 800;
+                background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                margin: 1rem 0;
+            }}
+
+            /* Пустое состояние */
+            .empty-state {{
+                background: rgba(255, 109, 158, 0.05);
+                border-radius: 1.5rem;
+                padding: 3rem;
+                text-align: center;
+                color: #ff9eb5;
+                border: 1px dashed #ffb6c1;
+            }}
+
+            /* Форма создания викторины */
+            .form-group {{
+                margin-bottom: 1.5rem;
+            }}
+
+            /* Профиль */
+            .info-card {{
+                background: white;
+                border-radius: 1.5rem;
+                padding: 1.5rem;
+                margin: 1.5rem 0;
+                border: 1px solid rgba(255, 109, 158, 0.2);
+            }}
+
+            .info-item {{
+                margin: 0.8rem 0;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid #ffe0e8;
+            }}
+
+            .info-label {{
+                font-weight: 700;
+                color: #ff6d9e;
+                width: 150px;
+                display: inline-block;
+            }}
+
+            .button-group {{
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+                flex-wrap: wrap;
+            }}
+
+            @media (max-width: 768px) {{
+                body {{ padding: 1rem; }}
+                .container {{ padding: 1rem; }}
+                h1 {{ font-size: 1.6rem; }}
+                .quiz-grid {{ grid-template-columns: 1fr; }}
+                .button-group {{ flex-direction: column; }}
+                .info-label {{ width: 100%; display: block; margin-bottom: 0.3rem; }}
+            }}
+        </style>
     </head>
     <body>
         <div class='container'>
             <div class='nav-buttons'>
-                <a href='/' class='nav-btn'>Главная</a>
-                <a href='/leaderboard' class='nav-btn'>Список лидеров</a>
-                <a href='/profile' class='nav-btn'>Профиль</a>
+                <a href='/' class='nav-btn'>🏠 Главная</a>
+                <a href='/leaderboard' class='nav-btn'>🏆 Список лидеров</a>
+                <a href='/profile' class='nav-btn'>👤 Профиль</a>
             </div>
             
+            <h1>📚 Все викторины</h1>
             
             <div class='quiz-grid'>
                 {defquizzesHtml}
             </div>
             <div class='custom-quizzes'>
-                {customquizzesHtml}
+                <h2>✨ Пользовательские викторины</h2>
+                <div class='quiz-grid'>
+                    {customquizzesHtml}
+                </div>
             </div>
         </div>
     </body>
@@ -1325,6 +975,7 @@ app.MapGet("/quizzes", async (AppDbContext db, HttpContext context) =>
 
     return Results.Content(html, "text/html; charset=utf-8");
 });
+
 //прохождение викторинки
 app.MapGet("/quiz/{id:int}", async (int id, HttpContext context, AppDbContext db) =>
 {
@@ -1355,8 +1006,8 @@ app.MapGet("/quiz/{id:int}", async (int id, HttpContext context, AppDbContext db
         questionsHtml += $@"
         <div class='question-block'>
             <div class='question-header'>
-                <span class='question-num'>Вопрос {question.OrderNum}</span>
-                <span class='question-points'>{question.Points} очков</span>
+                <span class='question-num'>📌 Вопрос {question.OrderNum}</span>
+                <span class='question-points'>⭐ {question.Points} очков</span>
             </div>
             <div class='question-text'>{question.Text}</div>
             <div class='answers'>
@@ -1378,117 +1029,159 @@ app.MapGet("/quiz/{id:int}", async (int id, HttpContext context, AppDbContext db
                 box-sizing: border-box;
             }}
             body {{
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: white;
-                color: black;
-                padding: 40px;
+                font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+                background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%);
+                color: #2d2d2d;
+                padding: 2rem;
+                min-height: 100vh;
             }}
             .container {{
-                max-width: 800px;
+                max-width: 900px;
                 margin: 0 auto;
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: blur(10px);
+                border-radius: 2rem;
+                padding: 2rem;
+                box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.4);
             }}
             .quiz-header {{
-                border: 1px solid black;
-                padding: 30px;
-                margin-bottom: 30px;
+                background: linear-gradient(135deg, rgba(255, 109, 158, 0.1), rgba(255, 182, 193, 0.1));
+                border-radius: 1.5rem;
+                padding: 2rem;
+                margin-bottom: 2rem;
                 text-align: center;
+                border: 1px solid rgba(255, 109, 158, 0.2);
             }}
             h1 {{
-                font-size: 2em;
-                margin-bottom: 10px;
-                border-bottom: 2px solid black;
-                display: inline-block;
+                font-size: 2rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                margin-bottom: 0.8rem;
+            }}
+            .quiz-header p {{
+                color: #666;
+                margin: 0.5rem 0;
             }}
             .question-block {{
-                border: 1px solid black;
-                padding: 20px;
-                margin-bottom: 20px;
                 background: white;
+                border-radius: 1.5rem;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                border: 1px solid rgba(255, 109, 158, 0.15);
+                transition: all 0.3s ease;
+            }}
+            .question-block:hover {{
+                border-color: #ffb6c1;
+                box-shadow: 0 5px 15px rgba(255, 109, 158, 0.05);
             }}
             .question-header {{
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #ccc;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid #ffe0e8;
             }}
             .question-num {{
-                font-weight: bold;
-                color: #667eea;
+                font-weight: 700;
+                color: #ff6d9e;
             }}
             .question-points {{
-                font-weight: bold;
-                color: #28a745;
+                font-weight: 700;
+                color: #ffb6c1;
             }}
             .question-text {{
-                margin-bottom: 20px;
-                font-size: 1.1em;
+                margin-bottom: 1.2rem;
+                font-size: 1.05rem;
+                font-weight: 500;
+                color: #2d2d2d;
             }}
             .answers {{
                 display: flex;
                 flex-direction: column;
-                gap: 12px;
+                gap: 0.8rem;
             }}
             .answer-option {{
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                padding: 8px;
-                border: 1px solid #eee;
+                gap: 0.8rem;
+                padding: 0.6rem;
+                border-radius: 1rem;
+                background: #fefafc;
+                border: 1px solid #ffe0e8;
                 cursor: pointer;
+                transition: all 0.2s ease;
             }}
             .answer-option:hover {{
-                background: #f5f5f5;
+                background: #fff5f8;
+                border-color: #ffb6c1;
+                transform: translateX(5px);
             }}
             input[type='radio'] {{
-                width: 18px;
-                height: 18px;
-                cursor: pointer;
+                width: 1.2rem;
+                height: 1.2rem;
+                accent-color: #ff6d9e;
+                margin: 0;
             }}
             .submit-btn {{
-                background: black;
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
                 color: white;
                 border: none;
-                padding: 12px 24px;
-                font-size: 1.1em;
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+                font-weight: 600;
                 cursor: pointer;
                 width: 100%;
-                margin-top: 20px;
-                font-family: monospace;
+                margin-top: 1.5rem;
+                border-radius: 60px;
+                transition: all 0.3s ease;
             }}
             .submit-btn:hover {{
-                background: #333;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px -8px #ff6d9e;
             }}
             .nav-btn {{
-                background: black;
-                color: white;
+                background: white;
+                color: #ff6d9e;
                 text-decoration: none;
-                padding: 8px 16px;
+                padding: 0.6rem 1.2rem;
+                border-radius: 60px;
                 display: inline-block;
-                margin-bottom: 20px;
+                margin-bottom: 1.5rem;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                border: 1px solid #ffb6c1;
             }}
             .nav-btn:hover {{
-                background: #333;
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                color: white;
+                transform: translateY(-2px);
+                border-color: transparent;
             }}
             @media (max-width: 600px) {{
-                body {{ padding: 20px; }}
-                .quiz-header {{ padding: 20px; }}
+                body {{ padding: 1rem; }}
+                .container {{ padding: 1rem; }}
+                .quiz-header {{ padding: 1rem; }}
+                h1 {{ font-size: 1.5rem; }}
             }}
         </style>
     </head>
     <body>
         <div class='container'>
-            <a href='/quizzes' class='nav-btn'>Назад</a>
+            <a href='/quizzes' class='nav-btn'>← Назад к викторинам</a>
             
             <div class='quiz-header'>
-                <h1>{quiz.Title}</h1>
+                <h1>📝 {quiz.Title}</h1>
                 <p>{quiz.Description ?? "Нет описания"}</p>
-                <p>Максимум баллов: {quiz.TotalPoints}</p>
+                <p style='color: #ff6d9e; font-weight: 600;'>🏆 Максимум баллов: {quiz.TotalPoints}</p>
             </div>
             
             <form method='post' action='/quiz/{quiz.Id}/submit'>
                 {questionsHtml}
-                <button type='submit' class='submit-btn'>Завершить</button>
+                <button type='submit' class='submit-btn'>✅ Завершить викторину</button>
             </form>
         </div>
     </body>
@@ -1496,6 +1189,7 @@ app.MapGet("/quiz/{id:int}", async (int id, HttpContext context, AppDbContext db
 
     return Results.Content(html, "text/html; charset=utf-8");
 });
+
 //обработчик
 app.MapPost("/quiz/{id:int}/submit", async (int id, HttpContext context, AppDbContext db) =>
 {
@@ -1588,47 +1282,102 @@ app.MapPost("/quiz/{id:int}/submit", async (int id, HttpContext context, AppDbCo
 
     //показваем пользователю результат
     int percentage = quiz.TotalPoints > 0 ? (totalScore * 100 / quiz.TotalPoints) : 0;
+    string emoji = percentage >= 80 ? "🎉" : percentage >= 50 ? "👍" : "📚";
 
     string resultHtml = $@"
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Result</title>
+        <title>Результат викторины</title>
+        <meta charset='UTF-8'>
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
             body {{
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: white;
-                color: black;
+                font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+                background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%);
+                color: #2d2d2d;
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                padding: 20px;
+                padding: 1.5rem;
             }}
             .container {{
-                border: 1px solid black;
-                padding: 40px;
-                max-width: 500px;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 2rem;
+                padding: 2.5rem;
+                max-width: 550px;
                 width: 100%;
                 text-align: center;
+                box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.4);
             }}
-            h1 {{ font-size: 2em; margin-bottom: 20px; border-bottom: 2px solid black; display: inline-block; }}
-            .score {{ font-size: 48px; font-weight: bold; margin: 20px 0; }}
-            .percentage {{ font-size: 24px; margin: 10px 0; }}
-            .status {{ margin: 20px 0; padding: 10px; border: 1px solid black; display: inline-block; }}
-            .btn {{ display: inline-block; background: black; color: white; text-decoration: none; padding: 10px 20px; margin: 10px; }}
-            .btn:hover {{ background: #333; }}
+            h1 {{
+                font-size: 2rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                margin-bottom: 1.5rem;
+            }}
+            .score {{
+                font-size: 3.5rem;
+                font-weight: 800;
+                background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                margin: 1rem 0;
+            }}
+            .percentage {{
+                font-size: 1.5rem;
+                color: #ff9eb5;
+                margin: 0.5rem 0;
+                font-weight: 600;
+            }}
+            .status {{
+                margin: 1.5rem 0;
+                padding: 0.8rem;
+                background: rgba(255, 109, 158, 0.1);
+                border-radius: 1rem;
+                display: inline-block;
+                font-size: 2rem;
+            }}
+            .btn {{
+                display: inline-block;
+                background: white;
+                color: #ff6d9e;
+                text-decoration: none;
+                padding: 0.7rem 1.5rem;
+                margin: 0.5rem;
+                border-radius: 60px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: 1.5px solid #ffb6c1;
+            }}
+            .btn:hover {{
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                border-color: transparent;
+                color: white;
+                transform: translateY(-2px);
+            }}
+            .button-group {{
+                margin-top: 1.5rem;
+            }}
         </style>
     </head>
     <body>
         <div class='container'>
-            <h1>Результат</h1>
+            <div class='status'>{emoji}</div>
+            <h1>Результат викторины</h1>
             <div class='score'>{totalScore} / {quiz.TotalPoints}</div>
             <div class='percentage'>({percentage}%)</div>
-            <div>
-                <a href='/' class='btn'>На главную</a>
-                <a href='/profile' class='btn'>Профиль</a>
+            <div class='button-group'>
+                <a href='/' class='btn'>🏠 На главную</a>
+                <a href='/profile' class='btn'>👤 Профиль</a>
+                <a href='/quizzes' class='btn'>📚 Другие викторины</a>
             </div>
         </div>
     </body>
@@ -1636,6 +1385,7 @@ app.MapPost("/quiz/{id:int}/submit", async (int id, HttpContext context, AppDbCo
 
     return Results.Content(resultHtml, "text/html; charset=utf-8");
 });
+
 app.MapGet("/leaderboard", async (HttpContext context, AppDbContext db) => //таблица лидеров(выбрать параметр нужно)
 {
     string userId = context.User.FindFirstValue("UserId");
@@ -1646,95 +1396,9 @@ app.MapGet("/leaderboard", async (HttpContext context, AppDbContext db) => //т�
 <head>
     <title>Leaderboard</title>
     <meta charset='UTF-8'>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: white;
-            color: black;
-            padding: 40px;
-        }}
-        .container {{
-            border: 1px solid black;
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
-            margin: 0 auto;
-            text-align: center;
-        }}
-        h1 {{
-            font-size: 2em;
-            margin-bottom: 20px;
-            border-bottom: 2px solid black;
-            display: inline-block;
-        }}
-        .filters {{
-            margin: 20px 0;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }}
-        .filter-group {{
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }}
-        .filter-group label {{
-            font-weight: bold;
-        }}
-        select, button {{
-            padding: 8px 16px;
-            border: 1px solid black;
-            background: white;
-            font-family: monospace;
-            font-size: 1em;
-        }}
-        button {{
-            background: black;
-            color: white;
-            cursor: pointer;
-        }}
-        button:hover {{
-            background: #333;
-        }}
-        table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }}
-        th, td {{
-            border: 1px solid black;
-            padding: 10px;
-            text-align: left;
-        }}
-        th {{
-            background: #f5f5f5;
-        }}
-        tr:hover {{
-            background: #f9f9f9;
-        }}
-        .loading {{
-            text-align: center;
-            padding: 40px;
-            font-style: italic;
-            color: #666;
-        }}
-        .btn {{
-            display: inline-block;
-            background: black;
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            margin: 10px;
-        }}
-        .btn:hover {{ background: #333; }}
-        @media (max-width: 600px) {{
-            body {{ padding: 20px; }}
-            th, td {{ padding: 6px; font-size: 12px; }}
-        }}
-    </style>
+        <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <link rel='stylesheet' href='/css/style.css'>
 </head>
 <body>
     <div class='container'>
@@ -1871,6 +1535,335 @@ app.MapGet("/api/leaderboard", async (AppDbContext db, string sort = "totalscore
 
     return Results.Json(leaderboardData);
 });
+//страница создания викторины
+app.MapGet("/create-quiz", (HttpContext context) =>
+{
+    string userId = context.User.FindFirstValue("UserId");
+
+    string html = @"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Создание викторины</title>
+        <meta charset='UTF-8'>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: white;
+                padding: 40px;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            h1 {
+                border-bottom: 2px solid black;
+                display: inline-block;
+                margin-bottom: 30px;
+            }
+            .form-section {
+                border: 1px solid black;
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            input, textarea, select {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid black;
+                font-family: inherit;
+            }
+            button {
+                background: black;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                cursor: pointer;
+                margin-top: 10px;
+            }
+            button:hover { background: #333; }
+            .question-block {
+                border: 1px solid #ccc;
+                padding: 15px;
+                margin: 15px 0;
+                background: #f9f9f9;
+            }
+            .answer-row {
+                display: flex;
+                gap: 10px;
+                margin: 10px 0;
+                align-items: center;
+            }
+            .answer-row input[type='text'] {
+                flex: 1;
+            }
+            .answer-row input[type='checkbox'] {
+                width: auto;
+            }
+            .remove-btn {
+                background: #dc3545;
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+            .add-btn {
+                background: #28a745;
+                margin-top: 5px;
+            }
+            .add-btn.disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+            .nav-btn {
+                background: black;
+                color: white;
+                text-decoration: none;
+                padding: 8px 16px;
+                display: inline-block;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <a href='/' class='nav-btn'>← На главную</a>
+            <h1>➕ Создание викторины</h1>
+            
+            <form method='post' action='/create-quiz' id='quizForm'>
+                <!-- Основная информация -->
+                <div class='form-section'>
+                    <h3>Основная информация</h3>
+                    <div class='form-group'>
+                        <label>Название викторины:</label>
+                        <input type='text' name='title' required>
+                    </div>
+                    <div class='form-group'>
+                        <label>Описание:</label>
+                        <textarea name='description' rows='3'></textarea>
+                    </div>
+                    <div class='form-group'>
+                        <label>Сложность (1-5):</label>
+                        <select name='difficulty'>
+                            <option value='1'>★ Очень легкая</option>
+                            <option value='2'>★★ Легкая</option>
+                            <option value='3'>★★★ Средняя</option>
+                            <option value='4'>★★★★ Сложная</option>
+                            <option value='5'>★★★★★ Очень сложная</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Вопросы -->
+                <div class='form-section'>
+                    <h3>Вопросы</h3>
+                    <div id='questionsContainer'></div>
+                    <button type='button' onclick='addQuestion()' class='add-btn'>+ Добавить вопрос</button>
+                </div>
+                
+                <button type='submit'>Сохранить викторину</button>
+            </form>
+        </div>
+        
+        <script>
+            let questionCount = 0;
+            
+            function updateAddAnswerButton(questionId) {
+                const answersContainer = document.getElementById(`answers_${questionId}`);
+                const answerCount = answersContainer.children.length;
+                const addButton = document.getElementById(`addAnswerBtn_${questionId}`);
+                
+                if (addButton) {
+                    if (answerCount >= 5) {
+                        addButton.disabled = true;
+                        addButton.style.opacity = '0.5';
+                        addButton.style.cursor = 'not-allowed';
+                        addButton.title = 'Максимум 5 вариантов ответа';
+                    } else {
+                        addButton.disabled = false;
+                        addButton.style.opacity = '1';
+                        addButton.style.cursor = 'pointer';
+                        addButton.title = '';
+                    }
+                }
+            }
+            
+            function addQuestion() {
+                questionCount++;
+                const container = document.getElementById('questionsContainer');
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-block';
+                questionDiv.id = `question_${questionCount}`;
+                questionDiv.innerHTML = `
+                    <div style='display: flex; justify-content: space-between;'>
+                        <strong>Вопрос ${questionCount}</strong>
+                        <button type='button' onclick='removeQuestion(${questionCount})' class='remove-btn'>Удалить</button>
+                    </div>
+                    <div class='form-group'>
+                        <label>Текст вопроса:</label>
+                        <input type='text' name='questions[${questionCount}].text' required>
+                    </div>
+                    <div class='form-group'>
+                        <label>Баллы за ответ:</label>
+                        <input type='number' name='questions[${questionCount}].points' value='10' min='1' max='100'>
+                    </div>
+                    <div class='form-group'>
+                        <label>Варианты ответов (максимум 5):</label>
+                        <div id='answers_${questionCount}'>
+                            <div class='answer-row'>
+                                <input type='text' name='questions[${questionCount}].answers[1].text' placeholder='Вариант ответа' required>
+                                <label style='display: inline;'><input type='checkbox' name='questions[${questionCount}].answers[1].isCorrect'> Правильный</label>
+                                <button type='button' onclick='removeAnswer(this, ${questionCount})' class='remove-btn' style='padding: 2px 8px;'>✕</button>
+                            </div>
+                        </div>
+                        <button type='button' id='addAnswerBtn_${questionCount}' onclick='addAnswer(${questionCount})' class='add-btn' style='font-size: 12px;'>+ Добавить вариант ответа</button>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+                updateAddAnswerButton(questionCount);
+            }
+            
+            function removeQuestion(id) {
+                const element = document.getElementById(`question_${id}`);
+                if (element) element.remove();
+            }
+            
+            function addAnswer(questionId) {
+                const answersContainer = document.getElementById(`answers_${questionId}`);
+                const answerCount = answersContainer.children.length + 1;
+                
+                //проверяем, не превышен ли лимит в 5 ответов
+                if (answersContainer.children.length >= 5) {
+                    alert('Максимум 5 вариантов ответа на вопрос');
+                    return;
+                }
+                
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'answer-row';
+                answerDiv.innerHTML = `
+                    <input type='text' name='questions[${questionId}].answers[${answerCount}].text' placeholder='Вариант ответа' required>
+                    <label style='display: inline;'><input type='checkbox' name='questions[${questionId}].answers[${answerCount}].isCorrect'> Правильный</label>
+                    <button type='button' onclick='removeAnswer(this, ${questionId})' class='remove-btn' style='padding: 2px 8px;'>✕</button>
+                `;
+                answersContainer.appendChild(answerDiv);
+                updateAddAnswerButton(questionId);
+            }
+            
+            function removeAnswer(button, questionId) {
+                const answerRow = button.parentElement;
+                answerRow.remove();
+                updateAddAnswerButton(questionId);
+            }
+            
+            //добавляем первый вопрос автоматически
+            addQuestion();
+        </script>
+    </body>
+    </html>";
+
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+app.MapPost("/create-quiz", async (HttpContext context, AppDbContext db) =>
+{
+    string userId = context.User.FindFirstValue("UserId");
+
+    int creatorId = int.Parse(userId);
+    var form = await context.Request.ReadFormAsync();
+
+    //создаём викторину
+    var quiz = new Quiz
+    {
+        Title = form["title"]!,
+        Description = form["description"]!,
+        CreatorId = creatorId,
+        Difficulty = int.Parse(form["difficulty"]!)
+    };
+    db.Quizzes.Add(quiz);
+    await db.SaveChangesAsync();
+
+    int totalPoints = 0;
+    int questionsCount = 0;
+
+    //обрабатываем вопросы
+    foreach (var key in form.Keys)
+    {
+        string keyStr = key.ToString();
+        if (keyStr.Contains("questions[") && keyStr.EndsWith("].text"))
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(keyStr, @"questions\[(\d+)\]\.text"); //ищем индекс вопроса
+            if (match.Success)
+            {
+                int questionIndex = int.Parse(match.Groups[1].Value);
+                string questionText = form[keyStr]!;
+                string pointsKey = $"questions[{questionIndex}].points";
+                int points = int.TryParse(form[pointsKey], out int p) ? p : 10;
+
+                var question = new Question //добавляем вопрос
+                {
+                    QuizId = quiz.Id,
+                    Text = questionText,
+                    Points = points,
+                    OrderNum = questionsCount + 1
+                };
+
+                db.Questions.Add(question);
+                await db.SaveChangesAsync();
+
+                totalPoints += points;
+                questionsCount++;
+
+                //обрабатываем ответы для этого вопроса
+                foreach (var answerKey in form.Keys)
+                {
+                    string answerKeyStr = answerKey.ToString();
+                    if (answerKeyStr.Contains($"questions[{questionIndex}].answers[") && answerKeyStr.EndsWith("].text")) //ищем индекс ответа
+                    {
+                        var answerMatch = System.Text.RegularExpressions.Regex.Match(answerKeyStr, @"answers\[(\d+)\]\.text");
+                        if (answerMatch.Success)
+                        {
+                            int answerIndex = int.Parse(answerMatch.Groups[1].Value);
+                            string answerText = form[answerKeyStr]!;
+                            string isCorrectKey = $"questions[{questionIndex}].answers[{answerIndex}].isCorrect";
+                            bool isCorrect = form.ContainsKey(isCorrectKey);
+
+                            var answer = new Answer //добавялем вопрос
+                            {
+                                QuestionId = question.Id,
+                                Text = answerText,
+                                IsCorrect = isCorrect,
+                                OrderNum = answerIndex
+                            };
+                            db.Answers.Add(answer);
+                        }
+                    }
+                }
+                await db.SaveChangesAsync();
+            }
+        }
+    }
+
+    //обновляем статистику викторины
+    quiz.TotalPoints = totalPoints;
+    quiz.QuestionsCount = questionsCount;
+    await db.SaveChangesAsync();
+
+    //обновляем статистику пользователя
+    var user = await db.Users.FindAsync(creatorId);
+    if (user != null)
+    {
+        user.QuizzesCreated++;
+        await db.SaveChangesAsync();
+    }
+
+    //перенаправляем на страницу с викторинами
+    return Results.Redirect($"/quizzes");
+});
 app.Run();
 static string BuildPostgresConnectionString(string rawConnectionString) //жоска украденный код по преобразованию строки
 {
@@ -2006,7 +1999,6 @@ public class Question
     public string Text { get; set; } = "";
     public int Points { get; set; } = 1;
     public int OrderNum { get; set; } = 0;
-    public string Type { get; set; } = "single";
 
     public Quiz? Quiz { get; set; }
     public ICollection<Answer> Answers { get; set; } = new List<Answer>();
