@@ -72,7 +72,7 @@ app.MapGet("/", async (HttpContext context) =>
     bool isLoggedIn = context.User.Identity?.IsAuthenticated == true;
     string userName = context.User.Identity?.Name ?? "";
 
-    string welcomeMessage = isLoggedIn ? $"Hello, {userName}!" : "Welcome!";
+    string welcomeMessage = isLoggedIn ? $"Добро пожаловать, {userName}!" : "Добро пожаловать!";
 
     string buttonsHtml = "";
     if (isLoggedIn)
@@ -98,10 +98,10 @@ app.MapGet("/", async (HttpContext context) =>
     {
         buttonsHtml = @"
             <form method=""get"" action=""/register"">
-                <button type=""submit"" class=""btn btn_signin"">Sign in →</button>
+                <button type=""submit"" class=""btn btn_signin"">Зарегистрироваться</button>
             </form>
             <form method=""get"" action=""/login"">
-                <button type=""submit"" class=""btn btn_login"">Log in →</button>
+                <button type=""submit"" class=""btn btn_login"">Войти</button>
             </form>";
     }
 
@@ -118,7 +118,9 @@ app.MapGet("/", async (HttpContext context) =>
         <div class=""starter-container"">
             <div class=""split-layout"">
                 <div class=""left-side"">
-                    
+                    <div class=""sticker-container""> 
+                        <img src='/img/cat.png' class=""center-sticker"">
+                    </div>
                 </div>
 
                 <div class=""right-side"">
@@ -126,6 +128,7 @@ app.MapGet("/", async (HttpContext context) =>
                         <div class=""welcome_title""> {welcomeMessage} </div>
                         <div class=""welcome_sub"">🏵</div>
                     </div>
+
                     <div class=""buttons-stack"">
                         {buttonsHtml}
                     </div>
@@ -152,31 +155,31 @@ app.MapGet("/register", () =>
         </head>
         <body>
             <div class=""container"">
-                <h1>⋆.࿔🌸 Registration *:･</h1>
+                <h1>⋆.࿔🌸 Регистрация *:･</h1>
                 <form method=""post"" action=""/register"">
 
                     <div class=""form-group"">
                         <input type=""text"" name=""login"" id=""login"" required minlength=""3"" placeholder="" "" />
-                        <label for=""login"">login:</label>
+                        <label for=""login"">имя:</label>
                         <div class=""input-note""></div>
                     </div>
 
                     <div class=""form-group"">
                         <input type=""password"" name=""password"" id=""password"" required minlength=""4"" placeholder="" "" />
-                        <label for=""password"">password:</label>
+                        <label for=""password"">пороль:</label>
                         <div class=""input-note""></div>
                     </div>
 
                     <div class=""form-group"">
                         <input type=""password"" name=""confirm_password"" id=""confirm_password"" required placeholder="" "" />
-                        <label for=""confirm_password"">password confirmation:</label>
+                        <label for=""confirm_password"">подтвердите пороль:</label>
                         <div class=""input-note""></div>
                     </div>
 
-                    <button type=""submit"">sign in</button>
+                    <button type=""submit"">зарегистироваться</button>
 
                 </form>
-                <a href=""/"" class=""back-link"">return</a>
+                <a href=""/"" class=""back-link"">обратно</a>
             </div>
         </body>
     </html>";
@@ -284,21 +287,21 @@ app.MapGet("/login", () =>
         </head>
         <body>
             <div class=""container"">
-                <h1>⋆.࿔🌸 Log in *:･</h1>
+                <h1>⋆.࿔🌸 Войти *:･</h1>
                 <form method=""post"" action=""/login"">
                     <div class=""form-group"">
                         <input type=""text"" name=""login"" id=""login"" required placeholder="" "" />
-                        <label for=""login"">login:</label>
+                        <label for=""login"">имя:</label>
                     </div>
                     <div class=""form-group"">
                         <input type=""password"" name=""password"" id=""password"" required placeholder="" "" />
-                        <label for=""password"">password:</label>
+                        <label for=""password"">пороль:</label>
                     </div>
                     <button type=""submit"">Войти</button>
                 </form>
                 <div class=""links-container"">
-                    <a href=""/"" class=""back-link"">return</a>
-                    <a href=""/register"" class=""back-link"">no acc? let's create</a>
+                    <a href=""/"" class=""back-link"">обратно</a>
+                    <a href=""/register"" class=""back-link"">нет аккаунта? создать!</a>
                 </div>
             </div>
         </body>
@@ -334,7 +337,7 @@ app.MapPost("/login", async (HttpContext context, AppDbContext db) =>
                 <h1>Ошибка входа</h1>
                 <div class=""content"">
                     <div class=""error-message"">
-                        <p style=""margin: 0;"">❌ Неверный логин или пароль!</p>
+                        <p style=""margin: 0;"">Неверный логин или пароль!</p>
                     </div>
                     <p>Пожалуйста, проверьте правильность введенных данных.</p>
                     <div class=""buttons-container"">
@@ -364,7 +367,7 @@ app.MapPost("/login", async (HttpContext context, AppDbContext db) =>
                     <h1>Вход выполнен успешно!</h1>
                     <div class=""content"">
                         <div class=""welcome-message"">
-                            <p style=""margin: 0;"">🌸 Здравствуйте, " + user.Login + @"! 🌸</p>
+                            <p style=""margin: 0;"">🌸 Добро пожаловать, " + user.Login + @"! 🌸</p>
                         </div>
                         <a href=""/"" class=""button"">На главную</a>
                     </div>
@@ -428,65 +431,111 @@ app.MapGet("/profile", async (HttpContext context, AppDbContext db) =>
     <!DOCTYPE html>
     <html>
         <head>
-            <title>Личный кабинет</title>
-            <meta charset='UTF-8'>
-            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-            <link rel='stylesheet' href='/css/style.css'>
-        </head>
+        <title>Личный кабинет</title>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <link rel='stylesheet' href='/css/style.css'>
+        <style>
+
+            .button-group {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 35px;
+                flex-wrap: nowrap;
+                overflow-x: auto;   
+                padding: 45px;
+            }
+
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 5px 18px;
+                font-size: 15px;
+                font-weight: 600;
+                font-family: inherit;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                border: none;
+                min-width: 140px;   
+                white-space: nowrap;  
+                background: white;
+                color: #d43f7a;
+                border: 2px solid #ffbfd2;
+            }
+
+            .btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(255, 105, 180, 0.2);
+            }
+
+            .btn:active {
+                transform: translateY(0px);
+            }
+            .btn-primary {
+                background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                color: white;
+                border: none;
+                box-shadow: 0 4px 12px rgba(255, 109, 158, 0.3);
+            }
+
+            .btn-primary:hover {
+                background: linear-gradient(100deg, #ff558a, #ff779f);
+                box-shadow: 0 8px 20px rgba(255, 109, 158, 0.4);
+            }
+
+        </style>
+    </head>
         <body>
-            <div class="container profile-container">
-                <h1>🌸 Личный кабинет 🌸</h1>
+        <div class="container profile-container">
+            <h1>🌸⋆｡‧˚ʚ Личный кабинет ɞ˚‧｡⋆🌸</h1>
 
-                <div class="profile-wrapper">
-                    <!-- Левая часть с аватаром -->
-                    <div class="profile-left">
-                        <div class="avatar">
-                            🌸
-                        </div>
-                        <div class="username">{{userName}}</div>
-                        <div class="user-id">
-                            🆔 ID: {{user!.Id}}
-                        </div>
-                    </div>
-
-                    <!-- Правая часть со статистикой -->
-                    <div class="profile-right">
-                        <div class="stats-card">
-                            <h3>Моя статистика</h3>
-                            <div class="stats-grid">
-                                <div class="stat-item">
-                                    <div class="stat-label">📊 Пройденные викторины</div>
-                                    <div class="stat-value">{{user.QuizzesPassed}} <span class="stat-unit">шт.</span></div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-label">✏️ Созданные викторины</div>
-                                    <div class="stat-value">{{user.QuizzesCreated}} <span class="stat-unit">шт.</span></div>
-                                </div>
-                                <div class="stat-item stat-item-large">
-                                    <div class="stat-label stat-label-large">🏆 Лучший счет</div>
-                                    <div class="stat-value stat-value-large">{{user.BestScore}} <span class="stat-unit">очков</span></div>
-                                </div>
-                            </div>
-                            <div class="stats-footer">
-                                ✨ Продолжай в том же духе! ✨
-                            </div>
-                        </div>
-                    </div>
+            <div class="profile-wrapper">
+                <div class="profile-left">
+                    <div class="avatar">🌸</div>
+                    <div class="username">{{userName}}</div>
+                    <div class="user-id">ID: {{user!.Id}}</div>
                 </div>
 
-                <!-- Кнопки внизу -->
-                <div class="button-group">
-                    <a href="/leaderboard" class="button">🏅 Список лидеров</a>
-                <form method='get' action='/create-quiz'>
-                     <button type='submit' class='shop-btn'>➕ Создать викторину</button>
-                </form>
-                    <form method="post" action="/logout" style="display: inline;">
-                        <button type="submit" class="logout-btn">🚪 Выйти</button>
-                    </form>
-                    <a href="/" class="button home-btn">🏠 На главную</a>
+                <div class="profile-right">
+                    <div class="stats-card">
+                        <h3> ⋆｡‧˚ʚ🍓ɞ˚‧｡⋆ </h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label"> Пройденные викторины</div>
+                                <div class="stat-value">{{user.QuizzesPassed}} <span class="stat-unit">шт.</span></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Созданные викторины</div>
+                                <div class="stat-value">{{user.QuizzesCreated}} <span class="stat-unit">шт.</span></div>
+                            </div>
+                            <div class="stat-item stat-item-large">
+                                <div class="stat-label stat-label-large">Лучший счет</div>
+                                <div class="stat-value stat-value-large">{{user.BestScore}} <span class="stat-unit">очков</span></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </body>
+
+    
+            <div class="button-group">
+                <a href="/leaderboard" class="btn btn-primary">Список лидеров</a>
+                <form method='get' action='/create-quiz' style="display: inline;">
+                    <button type='submit' class='btn btn-primary'>Создать викторину</button>
+                </form>
+                <a href="/" class="btn btn-primary">На главную</a>
+                <form method="post" action="/logout" style="display: inline;">
+                    <button type="submit" class="btn btn-primary">Выйти</button>
+                </form>
+            </div>
+        </div>
+
+    </body>
     </html>
     """;
 
@@ -519,12 +568,12 @@ app.MapGet("/quizzes", async (AppDbContext db, HttpContext context) =>
                 <h3>{quiz.Title}</h3>
                 <p>{quiz.Description ?? "Описание отсутствует"}</p>
                 <div class='quiz-stats'>
-                    <span>📋 {quiz.QuestionsCount} вопросов</span>
-                    <span>⭐ {quiz.TotalPoints} баллов</span>
-                    <span>🎮 {quiz.TimesPlayed} игр</span>
-                    <span>📊 Средний балл: {quiz.AverageScore}%</span>
+                    <span>๋࣭ ⭑ {quiz.QuestionsCount} вопросов</span>
+                    <span>๋࣭ ⭑ {quiz.TotalPoints} баллов</span>
+                    <span>๋࣭ ⭑ {quiz.TimesPlayed} игр</span>
+                    <span>Средний балл: {quiz.AverageScore}%</span>
                 </div>
-                <div class='quiz-creator'>👑 Автор: Админко</div>
+                <div class='quiz-creator'>Автор: Админко</div>
             </div>
         </a>";
     }
@@ -544,23 +593,23 @@ app.MapGet("/quizzes", async (AppDbContext db, HttpContext context) =>
         customquizzesHtml += $@"
         <a href='/quiz/{quiz.Id}' class='quiz-card-link'>
             <div class='quiz-card'>
-                <div class='quiz-badge user'>👤 Пользовательская</div>
+                <div class='quiz-badge user'>Пользовательская</div>
                 <h3>{quiz.Title}</h3>
                 <p>{quiz.Description ?? "Описание отсутствует"}</p>
                 <div class='quiz-stats'>
-                    <span>📋 {quiz.QuestionsCount} вопросов</span>
-                    <span>⭐ {quiz.TotalPoints} баллов</span>
-                    <span>🎮 {quiz.TimesPlayed} игр</span>
+                    <span>๋࣭ ⭑ {quiz.QuestionsCount} вопросов</span>
+                    <span>๋࣭ ⭑ {quiz.TotalPoints} баллов</span>
+                    <span>๋࣭ ⭑ {quiz.TimesPlayed} игр</span>
                 </div>
                 <div class='quiz-creator'>
-                    ✍️ Автор: {creatorName}
+                    Автор: {creatorName}
                 </div>
             </div>
         </a>";
     }
     customquizzesHtml += $@"
         <form method='get' action='/create-quiz'>
-            <button type='submit' class='shop-btn'>➕ Создать викторину</button>
+            <button type='submit' class='shop-btn'>⋆˚🐾˖°</button>
         </form> 
 ";
     //если нет пользовательских викторин
@@ -568,10 +617,10 @@ app.MapGet("/quizzes", async (AppDbContext db, HttpContext context) =>
     {
         customquizzesHtml = $@"
         <div class='empty-state'>
-            <p>😔 Пока нет пользовательских викторин</p>
+            <p>Пока нет пользовательских викторин</p>
             <p style='margin-top: 10px; font-size: 0.9em;'>Станьте первым создателем!</p>
             <form method='get' action='/create-quiz'>
-                <button type='submit' class='shop-btn'>➕ Создать викторину</button>
+                <button type='submit' class='shop-btn'>⋆˚🐾˖°</button>
             </form>
         </div>";
     }
@@ -953,18 +1002,18 @@ app.MapGet("/quizzes", async (AppDbContext db, HttpContext context) =>
     <body>
         <div class='container'>
             <div class='nav-buttons'>
-                <a href='/' class='nav-btn'>🏠 Главная</a>
-                <a href='/leaderboard' class='nav-btn'>🏆 Список лидеров</a>
-                <a href='/profile' class='nav-btn'>👤 Профиль</a>
+                <a href='/' class='nav-btn'>Главная</a>
+                <a href='/leaderboard' class='nav-btn'>Список лидеров</a>
+                <a href='/profile' class='nav-btn'>Профиль</a>
             </div>
             
-            <h1>📚 Все викторины</h1>
+            <h1>Все викторины</h1>
             
             <div class='quiz-grid'>
                 {defquizzesHtml}
             </div>
             <div class='custom-quizzes'>
-                <h2>✨ Пользовательские викторины</h2>
+                <h2>Пользовательские викторины</h2>
                 <div class='quiz-grid'>
                     {customquizzesHtml}
                 </div>
@@ -1006,7 +1055,7 @@ app.MapGet("/quiz/{id:int}", async (int id, HttpContext context, AppDbContext db
         questionsHtml += $@"
         <div class='question-block'>
             <div class='question-header'>
-                <span class='question-num'>📌 Вопрос {question.OrderNum}</span>
+                <span class='question-num'>Вопрос {question.OrderNum}</span>
                 <span class='question-points'>⭐ {question.Points} очков</span>
             </div>
             <div class='question-text'>{question.Text}</div>
@@ -1174,14 +1223,14 @@ app.MapGet("/quiz/{id:int}", async (int id, HttpContext context, AppDbContext db
             <a href='/quizzes' class='nav-btn'>← Назад к викторинам</a>
             
             <div class='quiz-header'>
-                <h1>📝 {quiz.Title}</h1>
+                <h1>{quiz.Title}</h1>
                 <p>{quiz.Description ?? "Нет описания"}</p>
-                <p style='color: #ff6d9e; font-weight: 600;'>🏆 Максимум баллов: {quiz.TotalPoints}</p>
+                <p style='color: #ff6d9e; font-weight: 600;'>>ᴗ< Максимум баллов: {quiz.TotalPoints}</p>
             </div>
             
             <form method='post' action='/quiz/{quiz.Id}/submit'>
                 {questionsHtml}
-                <button type='submit' class='submit-btn'>✅ Завершить викторину</button>
+                <button type='submit' class='submit-btn'>Завершить викторину</button>
             </form>
         </div>
     </body>
@@ -1391,109 +1440,186 @@ app.MapGet("/leaderboard", async (HttpContext context, AppDbContext db) => //т�
     string userId = context.User.FindFirstValue("UserId");
 
     string resultHtml = $@"
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Leaderboard</title>
-    <meta charset='UTF-8'>
-        <meta charset='UTF-8'>
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Leaderboard</title>
+            <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <link rel='stylesheet' href='/css/style.css'>
-</head>
-<body>
-    <div class='container'>
-        <h1>Список лидеров/рейтинрг</h1>
+            <style>
+            .container2 {{
+                max-width: 1100px;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.75);
+                backdrop-filter: blur(10px);
+                border-radius: 2rem;
+                padding: 100px 40px;
+                box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.35);
+                transition: all 0.3s ease;
+
+
+            }}
+            .button-group {{
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 35px;
+                flex-wrap: nowrap;
+                overflow-x: auto;   
+                padding: 45px;
+            }}
+
+            .btn {{
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 5px 18px;
+                font-size: 15px;
+                font-weight: 600;
+                font-family: inherit;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                border: none;
+                min-width: 140px;   
+                white-space: nowrap;  
+                background: white;
+                color: #d43f7a;
+                border: 2px solid #ffbfd2;
+            }}
+
+            .btn:hover {{
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(255, 105, 180, 0.2);
+            }}
+            
+            .btn:active {{
+                transform: translateY(0px);
+            }}
+            .btn-primary {{
+                background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                color: white;
+                border: none;
+                box-shadow: 0 4px 12px rgba(255, 109, 158, 0.3);
+            }}
+
+            .btn-primary:hover {{
+                background: linear-gradient(100deg, #ff558a, #ff779f);
+                box-shadow: 0 8px 20px rgba(255, 109, 158, 0.4);
+            }}
+
+            .loadBtn {{
+                background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                color: white;
+                border: none;
+                box-shadow: 0 4px 12px rgba(255, 109, 158, 0.3);
+            }}
+            .loadBtn:hover {{
+                background: linear-gradient(100deg, #ff558a, #ff779f);
+                box-shadow: 0 8px 20px rgba(255, 109, 158, 0.4);
+            }}
+
+        </style>
+        </head>
+
+        <body>
+            <div class='container2'>
+                <h1>Список лидеров/рейтинрг</h1>
         
-        <div class='filters'>
-            <div class='filter-group'>
-                <label>Выберите параметр:</label>
-                <select id='sortSelect'>
-                    <option value='totalscore'>Общее число баллов</option>
-                    <option value='quizzespassed'>Количество пройденных викторин</option>
-                    <option value='quizzescreated'>Количество созданных викторин</option>
-                </select>
+                <div class='filters'>
+                    <div class='filter-group'>
+                        <label>Выберите параметр:</label>
+                        <select id='sortSelect'>
+                            <option value='totalscore'>Общее число баллов</option>
+                            <option value='quizzespassed'>Количество пройденных викторин</option>
+                            <option value='quizzescreated'>Количество созданных викторин</option>
+                        </select>
+                    </div>
+                   
+                </div>
+        
+                <div id='leaderboardContainer'>
+                    <div class='loading'>Выберите параметр</div>
             </div>
-            <div class='filter-group'>
-                <button id='loadBtn'>Показать рейтинг</button>
+
+            <div class=""button-group"">
+                    <div class='filter-group'>
+                        <button id='loadBtn' class = 'btn loadBtn'> Показать рейтинг</button>
+                    </div>
+                <a href = '/' class= 'btn btn-primary' > На главную </a>
+                <a href = '/profile' class= 'btn btn-primary' > Профиль </a>
             </div>
         </div>
-        
-        <div id='leaderboardContainer'>
-            <div class='loading'>Выберите параметр</div>
-    </div>
-
-    <div>
-        <a href = '/' class= 'btn' > На главную </a>
-        <a href = '/profile' class= 'btn' > Профиль </a>
-    </div>
-</div>
 
 
-<script>
-        const sortSelect = document.getElementById('sortSelect');
-        const loadBtn = document.getElementById('loadBtn');
-        const container = document.getElementById('leaderboardContainer');
+        <script>
+                const sortSelect = document.getElementById('sortSelect');
+                const loadBtn = document.getElementById('loadBtn');
+                const container = document.getElementById('leaderboardContainer');
 
-        async function loadLeaderboard()
-        {{
-            const sortBy = sortSelect.value;
-
-            try
-            {{
-                const response = await fetch('/api/leaderboard?sort=' + sortBy);
-                const data = await response.json();
-
-                if (data.length === 0)
+                async function loadLeaderboard()
                 {{
-                    container.innerHTML = '<div class=""loading"">Ошибко. Пользователи не найдены</div>';
-                    return;
+                    const sortBy = sortSelect.value;
+
+                    try
+                    {{
+                        const response = await fetch('/api/leaderboard?sort=' + sortBy);
+                        const data = await response.json();
+
+                        if (data.length === 0)
+                        {{
+                            container.innerHTML = '<div class=""loading"">Ошибко. Пользователи не найдены</div>';
+                            return;
+                        }}
+
+                        let html = '<table><thead><tr>';
+                        html += '<th>#</th>';
+                        html += '<th>Пользователь</th>';
+                        html += '<th>Всего баллов</th>';
+                        html += '<th>Пройдено викторин</th>';
+                        html += '<th>Создано викторин</th>';
+                        html += '</tr></thead><tbody>';
+
+                        for (let i = 0; i < data.length; i++)
+                        {{
+                            const user = data[i];
+                            html += '<tr>';
+                            html += '<td>' + user.rank + '</td>';
+                            html += '<td>' + escapeHtml(user.login) + '</td>';
+                            html += '<td>' + user.totalPoints + '</td>';
+                            html += '<td>' + user.quizzesPassed + '</td>';
+                            html += '<td>' + user.quizzesCreated + '</td>';
+                            html += '</tr>';
+                        }}
+
+                        html += '</tbody></table>';
+                        html += '<div style=""margin-top: 20px; font-size: 0.9em; color: #666;"">';
+                        html += '</div>';
+
+                        container.innerHTML = html;
+                    }}
+                    catch (error)
+                    {{
+                        console.error('Ошибка:', error);
+                        container.innerHTML = '<div class=""loading"">Ошибко загрузки рейтнга</div>';
+                    }}
                 }}
 
-                let html = '<table><thead><tr>';
-                html += '<th>#</th>';
-                html += '<th>Пользователь</th>';
-                html += '<th>Всего баллов</th>';
-                html += '<th>Пройдено викторин</th>';
-                html += '<th>Создано викторин</th>';
-                html += '</tr></thead><tbody>';
-
-                for (let i = 0; i < data.length; i++)
+                function escapeHtml(text)
                 {{
-                    const user = data[i];
-                    html += '<tr>';
-                    html += '<td>' + user.rank + '</td>';
-                    html += '<td>' + escapeHtml(user.login) + '</td>';
-                    html += '<td>' + user.totalPoints + '</td>';
-                    html += '<td>' + user.quizzesPassed + '</td>';
-                    html += '<td>' + user.quizzesCreated + '</td>';
-                    html += '</tr>';
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
                 }}
 
-                html += '</tbody></table>';
-                html += '<div style=""margin-top: 20px; font-size: 0.9em; color: #666;"">';
-                html += '</div>';
-
-                container.innerHTML = html;
-            }}
-            catch (error)
-            {{
-                console.error('Ошибка:', error);
-                container.innerHTML = '<div class=""loading"">Ошибко загрузки рейтнг</div>';
-            }}
-        }}
-
-        function escapeHtml(text)
-        {{
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }}
-
-        loadBtn.addEventListener('click', loadLeaderboard);
-    </script>
-    </body>
-</html> ";
-    return Results.Content(resultHtml, "text/html; charset=utf-8");
+                loadBtn.addEventListener('click', loadLeaderboard);
+            </script>
+            </body>
+    </html> ";
+        return Results.Content(resultHtml, "text/html; charset=utf-8");
 });
 //загружеем саму таблицу
 app.MapGet("/api/leaderboard", async (AppDbContext db, string sort = "totalscore") =>
@@ -1543,110 +1669,245 @@ app.MapGet("/create-quiz", (HttpContext context) =>
     string html = @"
     <!DOCTYPE html>
     <html>
-    <head>
+        <head>
         <title>Создание викторины</title>
         <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
+    
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: white;
-                padding: 40px;
+                background: linear-gradient(135deg, #fff5f8 0%, #ffe0e8 100%);
+                min-height: 100vh;
+                padding: 40px 20px;
             }
+    
             .container {
-                max-width: 800px;
+                max-width: 900px;
                 margin: 0 auto;
             }
+    
             h1 {
-                border-bottom: 2px solid black;
+                font-size: 2.2rem;
+                color: #d43f7a;
+                text-align: center;
+                margin-bottom: 30px;
+                position: relative;
                 display: inline-block;
-                margin-bottom: 30px;
+                width: 100%;
             }
+
+    
+            h3 {
+                color: #d43f7a;
+                margin-bottom: 20px;
+                font-size: 1.3rem;
+            }
+    
             .form-section {
-                border: 1px solid black;
-                padding: 20px;
+                background: white;
+                border-radius: 20px;
+                padding: 25px;
                 margin-bottom: 30px;
+                box-shadow: 0 5px 20px rgba(255, 105, 180, 0.1);
+                border: 1px solid #ffbfd2;
             }
+    
             .form-group {
-                margin-bottom: 15px;
+                margin-bottom: 20px;
             }
+    
             label {
                 display: block;
-                font-weight: bold;
-                margin-bottom: 5px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #555;
+                font-size: 14px;
             }
+    
             input, textarea, select {
                 width: 100%;
-                padding: 8px;
-                border: 1px solid black;
+                padding: 12px 15px;
+                border: 2px solid #ffe0e8;
+                border-radius: 12px;
                 font-family: inherit;
+                font-size: 14px;
+                transition: all 0.3s ease;
+                background: #fff;
             }
-            button {
-                background: black;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                cursor: pointer;
-                margin-top: 10px;
+    
+            input:focus, textarea:focus, select:focus {
+                outline: none;
+                border-color: #ff6d9e;
+                box-shadow: 0 0 0 3px rgba(255, 109, 158, 0.1);
             }
-            button:hover { background: #333; }
+    
             .question-block {
-                border: 1px solid #ccc;
-                padding: 15px;
+                background: #fff9fb;
+                border: 2px solid #ffbfd2;
+                border-radius: 16px;
+                padding: 20px;
                 margin: 15px 0;
-                background: #f9f9f9;
+                transition: all 0.3s ease;
             }
+    
+            .question-block:hover {
+                box-shadow: 0 5px 15px rgba(255, 105, 180, 0.1);
+            }
+    
             .answer-row {
                 display: flex;
-                gap: 10px;
-                margin: 10px 0;
+                gap: 12px;
+                margin: 12px 0;
                 align-items: center;
+                flex-wrap: wrap;
             }
+    
             .answer-row input[type='text'] {
                 flex: 1;
+                min-width: 200px;
             }
+    
             .answer-row input[type='checkbox'] {
                 width: auto;
+                margin-right: 5px;
             }
+    
+            .answer-row label {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-weight: normal;
+                margin-bottom: 0;
+                white-space: nowrap;
+            }
+    
+            /* Общий стиль для всех кнопок */
+            button {
+                background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 50px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                font-family: inherit;
+            }
+    
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255, 109, 158, 0.3);
+            }
+    
+            button:active {
+                transform: translateY(0);
+            }
+    
             .remove-btn {
-                background: #dc3545;
-                padding: 5px 10px;
+                 background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                padding: 8px 16px;
                 font-size: 12px;
             }
-            .add-btn {
-                background: #28a745;
-                margin-top: 5px;
+    
+            .remove-btn:hover {
+                background: linear-gradient(100deg, #ff6666, #ff8888);
             }
-            .add-btn.disabled {
-                background: #ccc;
+    
+            .add-question-btn, .add-answer-btn {
+                background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                margin-top: 10px;
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+    
+            .add-question-btn:hover, .add-answer-btn:hover {
+                background: linear-gradient(100deg, #ff558a, #ff6d9e);
+            }
+    
+            button:disabled {
+                opacity: 0.5;
                 cursor: not-allowed;
+                transform: none;
             }
+    
+            button:disabled:hover {
+                transform: none;
+                box-shadow: none;
+            }
+    
+            .nav-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                margin-top: 30px;
+                flex-wrap: wrap;
+            }
+    
             .nav-btn {
-                background: black;
-                color: white;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 12px 28px;
+                font-size: 15px;
+                font-weight: 600;
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.3s ease;
                 text-decoration: none;
-                padding: 8px 16px;
-                display: inline-block;
+
+                background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                color: white;
+                border: none;
+                box-shadow: 0 4px 12px rgba(255, 109, 158, 0.3);
+            }
+    
+            .nav-btn:hover {
+              background: linear-gradient(100deg, #ff558a, #ff779f);
+                box-shadow: 0 8px 20px rgba(255, 109, 158, 0.4);
+            }
+    
+            .submit-btn {
+                background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+                color: white;
+                border: none;
+                padding: 14px 32px;
+                font-size: 16px;
+                min-width: 200px;
+            }
+    
+            .question-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
                 margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #ffbfd2;
+            }
+    
+            .question-header strong {
+                color: #d43f7a;
+                font-size: 1.1rem;
             }
         </style>
     </head>
-    <body>
+      <body>
         <div class='container'>
-            <a href='/' class='nav-btn'>← На главную</a>
-            <h1>➕ Создание викторины</h1>
-            
+            <h1>🌸 Создание викторины 🌸</h1>
+
             <form method='post' action='/create-quiz' id='quizForm'>
-                <!-- Основная информация -->
                 <div class='form-section'>
                     <h3>Основная информация</h3>
                     <div class='form-group'>
                         <label>Название викторины:</label>
-                        <input type='text' name='title' required>
+                        <input type='text' name='title' placeholder=""˗ˏˋ ꒰ ♡ ꒱ ˎˊ˗"" required>
                     </div>
                     <div class='form-group'>
                         <label>Описание:</label>
-                        <textarea name='description' rows='3'></textarea>
+                        <textarea name='description' rows='3' placeholder=""Расскажите, о чём эта викторина...""></textarea>
                     </div>
                     <div class='form-group'>
                         <label>Сложность (1-5):</label>
@@ -1659,41 +1920,38 @@ app.MapGet("/create-quiz", (HttpContext context) =>
                         </select>
                     </div>
                 </div>
-                
-                <!-- Вопросы -->
+
                 <div class='form-section'>
                     <h3>Вопросы</h3>
                     <div id='questionsContainer'></div>
-                    <button type='button' onclick='addQuestion()' class='add-btn'>+ Добавить вопрос</button>
+                    <button type='button' onclick='addQuestion()' class='add-question-btn'> ⋆˚🐾˖° </button>
                 </div>
-                
-                <button type='submit'>Сохранить викторину</button>
+
+                <div class='nav-buttons'>
+                    <button type='submit' class='submit-btn'>Сохранить викторину</button>
+                    <a href='/' class='nav-btn'>На главную</a>
+                    <a href='/profile' class='nav-btn'>Личный кабинет</a>
+                </div>
             </form>
         </div>
-        
+
         <script>
             let questionCount = 0;
-            
+
             function updateAddAnswerButton(questionId) {
                 const answersContainer = document.getElementById(`answers_${questionId}`);
                 const answerCount = answersContainer.children.length;
                 const addButton = document.getElementById(`addAnswerBtn_${questionId}`);
-                
+        
                 if (addButton) {
                     if (answerCount >= 5) {
                         addButton.disabled = true;
-                        addButton.style.opacity = '0.5';
-                        addButton.style.cursor = 'not-allowed';
-                        addButton.title = 'Максимум 5 вариантов ответа';
                     } else {
                         addButton.disabled = false;
-                        addButton.style.opacity = '1';
-                        addButton.style.cursor = 'pointer';
-                        addButton.title = '';
                     }
                 }
             }
-            
+
             function addQuestion() {
                 questionCount++;
                 const container = document.getElementById('questionsContainer');
@@ -1701,16 +1959,16 @@ app.MapGet("/create-quiz", (HttpContext context) =>
                 questionDiv.className = 'question-block';
                 questionDiv.id = `question_${questionCount}`;
                 questionDiv.innerHTML = `
-                    <div style='display: flex; justify-content: space-between;'>
-                        <strong>Вопрос ${questionCount}</strong>
+                    <div class=""question-header"">
+                        <strong> Вопрос ${questionCount} </strong>
                         <button type='button' onclick='removeQuestion(${questionCount})' class='remove-btn'>Удалить</button>
                     </div>
                     <div class='form-group'>
                         <label>Текст вопроса:</label>
-                        <input type='text' name='questions[${questionCount}].text' required>
+                        <input type='text' name='questions[${questionCount}].text' placeholder=""Введите текст вопроса..."" required>
                     </div>
                     <div class='form-group'>
-                        <label>Баллы за ответ:</label>
+                        <label>⭐ Баллы за ответ:</label>
                         <input type='number' name='questions[${questionCount}].points' value='10' min='1' max='100'>
                     </div>
                     <div class='form-group'>
@@ -1718,50 +1976,54 @@ app.MapGet("/create-quiz", (HttpContext context) =>
                         <div id='answers_${questionCount}'>
                             <div class='answer-row'>
                                 <input type='text' name='questions[${questionCount}].answers[1].text' placeholder='Вариант ответа' required>
-                                <label style='display: inline;'><input type='checkbox' name='questions[${questionCount}].answers[1].isCorrect'> Правильный</label>
-                                <button type='button' onclick='removeAnswer(this, ${questionCount})' class='remove-btn' style='padding: 2px 8px;'>✕</button>
+                                <label><input type='checkbox' name='questions[${questionCount}].answers[1].isCorrect'> Правильный</label>
+                                <button type='button' onclick='removeAnswer(this, ${questionCount})' class='remove-btn' style='padding: 8px 16px;'>✕</button>
                             </div>
                         </div>
-                        <button type='button' id='addAnswerBtn_${questionCount}' onclick='addAnswer(${questionCount})' class='add-btn' style='font-size: 12px;'>+ Добавить вариант ответа</button>
+                        <button type='button' id='addAnswerBtn_${questionCount}' onclick='addAnswer(${questionCount})' class='add-answer-btn'> ⋆˚🐾˖° </button>
                     </div>
                 `;
                 container.appendChild(questionDiv);
                 updateAddAnswerButton(questionCount);
             }
-            
+
             function removeQuestion(id) {
                 const element = document.getElementById(`question_${id}`);
-                if (element) element.remove();
+                if (element) {
+                    element.style.opacity = '0';
+                    setTimeout(() => element.remove(), 200);
+                }
             }
-            
+
             function addAnswer(questionId) {
                 const answersContainer = document.getElementById(`answers_${questionId}`);
-                const answerCount = answersContainer.children.length + 1;
-                
-                //проверяем, не превышен ли лимит в 5 ответов
+        
                 if (answersContainer.children.length >= 5) {
-                    alert('Максимум 5 вариантов ответа на вопрос');
+                    alert('🌸 Максимум 5 вариантов ответа на вопрос');
                     return;
                 }
-                
+        
+                const answerCount = answersContainer.children.length + 1;
                 const answerDiv = document.createElement('div');
                 answerDiv.className = 'answer-row';
                 answerDiv.innerHTML = `
                     <input type='text' name='questions[${questionId}].answers[${answerCount}].text' placeholder='Вариант ответа' required>
-                    <label style='display: inline;'><input type='checkbox' name='questions[${questionId}].answers[${answerCount}].isCorrect'> Правильный</label>
-                    <button type='button' onclick='removeAnswer(this, ${questionId})' class='remove-btn' style='padding: 2px 8px;'>✕</button>
+                    <label><input type='checkbox' name='questions[${questionId}].answers[${answerCount}].isCorrect'> Правильный</label>
+                    <button type='button' onclick='removeAnswer(this, ${questionId})' class='remove-btn' style='padding: 8px 16px;'>✕</button>
                 `;
                 answersContainer.appendChild(answerDiv);
                 updateAddAnswerButton(questionId);
             }
-            
+
             function removeAnswer(button, questionId) {
                 const answerRow = button.parentElement;
-                answerRow.remove();
-                updateAddAnswerButton(questionId);
+                answerRow.style.opacity = '0';
+                setTimeout(() => {
+                    answerRow.remove();
+                    updateAddAnswerButton(questionId);
+                }, 150);
             }
-            
-            //добавляем первый вопрос автоматически
+
             addQuestion();
         </script>
     </body>
@@ -1769,6 +2031,7 @@ app.MapGet("/create-quiz", (HttpContext context) =>
 
     return Results.Content(html, "text/html; charset=utf-8");
 });
+
 app.MapPost("/create-quiz", async (HttpContext context, AppDbContext db) =>
 {
     string userId = context.User.FindFirstValue("UserId");
