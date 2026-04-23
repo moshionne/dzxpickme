@@ -1297,13 +1297,6 @@ app.MapPost("/quiz/{id:int}/submit", async (int id, HttpContext context, AppDbCo
     db.Results.Add(result);
     await db.SaveChangesAsync();
 
-    //сохраняем ответы
-    foreach (var ua in userAnswers)
-    {
-        ua.ResultId = result.Id;
-        db.UserAnswers.Add(ua);
-    }
-    await db.SaveChangesAsync();
 
     //обновляем статисктику пользваотеля
     var user = await db.Users.FindAsync(currentUserId);
