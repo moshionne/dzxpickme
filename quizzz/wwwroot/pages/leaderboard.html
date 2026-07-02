@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Рейтинг</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.3);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid #ffb6c1;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+            color: white;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #ffe0e8;
+        }
+
+        tr:hover td {
+            background: rgba(255, 109, 158, 0.05);
+        }
+
+        .rank-1 td {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .rank-2 td {
+            background: rgba(192, 192, 192, 0.12);
+        }
+
+        .rank-3 td {
+            background: rgba(205, 127, 50, 0.12);
+        }
+
+        .medal {
+            font-size: 1.5rem;
+        }
+
+        .nav-buttons {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 109, 158, 0.2);
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: white;
+            color: #ff6d9e;
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 60px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid #ffb6c1;
+        }
+
+            .nav-btn:hover {
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #ff9eb5;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            th, td {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .medal {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>🏆 Таблица лидеров</h1>
+
+        <div style='overflow-x: auto;'>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Пользователь</th>
+                        <th>Баллы</th>
+                        <th>Пройдено</th>
+                        <th>Создано</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{Rows}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class='nav-buttons'>
+            <a href='/' class='nav-btn'>На главную</a>
+            <a href='/profile' class='nav-btn'>Профиль</a>
+            <a href='/quizzes' class='nav-btn'>Викторины</a>
+        </div>
+    </div>
+</body>
+</html>

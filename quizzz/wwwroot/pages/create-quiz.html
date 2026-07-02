@@ -1,0 +1,625 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Создание викторины</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fff5f8 0%, #ffe0e8 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #d43f7a;
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(255, 105, 180, 0.1);
+            border: 1px solid #ffbfd2;
+            overflow: hidden;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ffe0e8;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+            input:focus, textarea:focus, select:focus {
+                outline: none;
+                border-color: #ff6d9e;
+                box-shadow: 0 0 0 3px rgba(255, 109, 158, 0.1);
+            }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .question-block {
+            background: #fff9fb;
+            border: 2px solid #ffbfd2;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ffbfd2;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .answers-container {
+            margin: 15px 0;
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+            .answer-row input[type='text'] {
+                flex: 2;
+                min-width: 200px;
+            }
+
+            .answer-row .checkbox-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-weight: normal;
+                margin: 0;
+                white-space: nowrap;
+            }
+
+            .answer-row input[type='checkbox'] {
+                width: auto;
+                margin: 0;
+            }
+
+        button {
+            background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            margin: 5px;
+        }
+
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255, 109, 158, 0.3);
+            }
+
+            button:active {
+                transform: translateY(0);
+            }
+
+        .remove-btn {
+            background: #ff9999;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+            .remove-btn:hover {
+                background: #ff6666;
+            }
+
+        .ai-btn {
+            background: linear-gradient(100deg, #a8edea, #fed6e3);
+            color: #d43f7a;
+            border: 2px solid #ffbfd2;
+        }
+
+            .ai-btn:hover {
+                background: linear-gradient(100deg, #95d5d2, #fcc8d6);
+            }
+
+        .add-question-btn, .add-answer-btn {
+            margin-top: 10px;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: linear-gradient(100deg, #ff6d9e, #ff8eb5);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .nav-btn:hover {
+                background: linear-gradient(100deg, #ff558a, #ff779f);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(255, 109, 158, 0.4);
+            }
+
+        .submit-btn {
+            min-width: 200px;
+        }
+
+        @media (max-width: 600px) {
+            .answer-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+                .answer-row input[type='text'] {
+                    width: 100%;
+                }
+
+            .question-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.3);
+        }
+
+            .modal-content h2 {
+                color: #d43f7a;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .modal-content input, .modal-content select {
+                margin-bottom: 15px;
+            }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+            .modal-buttons button {
+                flex: 1;
+            }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #ff6d9e;
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>🌸 Создание викторины</h1>
+
+        <div style='text-align: center; margin-bottom: 20px;'>
+            <button type='button' id='aiCreateBtn' class='ai-btn'>Создать с помощью ИИ</button>
+        </div>
+
+        <form method='post' action='/create-quiz' id='quizForm'>
+            <div class='form-section'>
+                <h3>Основная информация</h3>
+                <div class='form-group'>
+                    <label>Название:</label>
+                    <input type='text' name='title' id='title' placeholder='Название викторины' required>
+                </div>
+                <div class='form-group'>
+                    <label>Описание:</label>
+                    <textarea name='description' id='description' rows='3' placeholder='Описание'></textarea>
+                </div>
+                <div class='form-group'>
+                    <label>Сложность:</label>
+                    <select name='difficulty' id='difficulty'>
+                        <option value='1'>☆ Легкая</option>
+                        <option value='3'>☆☆☆ Средняя</option>
+                        <option value='5'>☆☆☆☆☆ Сложная</option>
+                    </select>
+                </div>
+            </div>
+            <div class='form-section'>
+                <h3>Вопросы</h3>
+                <div id='questionsContainer'></div>
+                <button type='button' id='addQuestionBtn' class='add-question-btn'>+ Добавить вопрос</button>
+            </div>
+            <div class='nav-buttons'>
+                <button type='submit' class='submit-btn'>Сохранить викторину</button>
+                <a href='/' class='nav-btn'>На главную</a>
+                <a href='/profile' class='nav-btn'>Личный кабинет</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Модальное окно для ИИ -->
+    <div id='aiModal' class='modal'>
+        <div class='modal-content'>
+            <h2>✨ Создание викторины с помощью ИИ</h2>
+            <div class='form-group'>
+                <label>Тема викторины:</label>
+                <input type='text' id='aiTopic' placeholder='Например: Природа, Искусство, История...' required>
+            </div>
+            <div class='form-group'>
+                <label>Количество вопросов (1-10):</label>
+                <input type='number' id='aiQuestionsCount' min='1' max='10' value='3' required>
+            </div>
+            <div class='form-group'>
+                <label>Вариантов ответов (2-5):</label>
+                <input type='number' id='aiAnswersCount' min='2' max='5' value='4' required>
+            </div>
+            <div class='form-group'>
+                <label>Уровень сложности:</label>
+                <select id='aiDifficulty'>
+                    <option value='легкий'>Легкий</option>
+                    <option value='средний'>Средний</option>
+                    <option value='сложный'>Сложный</option>
+                </select>
+            </div>
+            <div class='modal-buttons'>
+                <button id='aiGenerateBtn'>Сгенерировать</button>
+                <button id='aiCancelBtn' style='background:#ccc;'>Отмена</button>
+            </div>
+            <div id='aiLoading' class='loading' style='display:none;'>⏳ ИИ генерирует викторину...</div>
+        </div>
+    </div>
+
+    <script>
+    // ============ РАБОТА С ВОПРОСАМИ ============
+    let questionCount = 0;
+
+    function addQuestion(questionData, answersData) {
+        questionCount++;
+        const container = document.getElementById('questionsContainer');
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'question-block';
+        questionDiv.id = 'question_' + questionCount;
+
+        const questionText = questionData ? questionData.text : '';
+        const questionPoints = questionData ? questionData.points : 10;
+
+        questionDiv.innerHTML = `
+            <div class='question-header'>
+                <strong>Вопрос ${questionCount}</strong>
+                <button type='button' onclick='removeQuestion(${questionCount})' class='remove-btn'>Удалить</button>
+            </div>
+            <div class='form-group'>
+                <label>Текст вопроса:</label>
+                <input type='text' name='questions[${questionCount}].text' value='${questionText.replace(/"/g, '&quot;')}' placeholder='Введите текст вопроса...' required>
+            </div>
+            <div class='form-group'>
+                <label>Баллы:</label>
+                <input type='number' name='questions[${questionCount}].points' value='${questionPoints}' min='1' max='100'>
+            </div>
+            <div class='form-group'>
+                <label>Варианты ответов:</label>
+                <div class='answers-container' id='answers_${questionCount}'></div>
+                <button type='button' onclick='addAnswer(${questionCount})' class='add-answer-btn'>+ Добавить ответ</button>
+            </div>
+        `;
+
+        container.appendChild(questionDiv);
+
+        // Добавляем ответы
+        if (answersData && answersData.length > 0) {
+            for (let i = 0; i < answersData.length; i++) {
+                addAnswerWithData(questionCount, answersData[i].text, answersData[i].isCorrect);
+            }
+        } else {
+            addAnswer(questionCount);
+        }
+    }
+
+    function addAnswerWithData(questionId, answerText, isCorrect) {
+        const container = document.getElementById('answers_' + questionId);
+        const answerCount = container.children.length + 1;
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'answer-row';
+        answerDiv.innerHTML = `
+            <input type='text' name='questions[${questionId}].answers[${answerCount}].text' value='${answerText.replace(/"/g, '&quot;')}' placeholder='Вариант ответа' required>
+            <label class='checkbox-label'>
+                <input type='checkbox' name='questions[${questionId}].answers[${answerCount}].isCorrect' ${isCorrect ? 'checked' : ''}> Правильный
+            </label>
+            <button type='button' onclick='removeAnswer(this)' class='remove-btn'>✕</button>
+        `;
+        container.appendChild(answerDiv);
+    }
+
+    function addAnswer(questionId) {
+        const container = document.getElementById('answers_' + questionId);
+        const answerCount = container.children.length + 1;
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'answer-row';
+        answerDiv.innerHTML = `
+            <input type='text' name='questions[${questionId}].answers[${answerCount}].text' placeholder='Вариант ответа' required>
+            <label class='checkbox-label'>
+                <input type='checkbox' name='questions[${questionId}].answers[${answerCount}].isCorrect'> Правильный
+            </label>
+            <button type='button' onclick='removeAnswer(this)' class='remove-btn'>✕</button>
+        `;
+        container.appendChild(answerDiv);
+    }
+
+    function removeQuestion(id) {
+        const element = document.getElementById('question_' + id);
+        if (element) {
+            element.remove();
+        }
+    }
+
+    function removeAnswer(button) {
+        const answerRow = button.closest('.answer-row');
+        if (answerRow) {
+            answerRow.remove();
+        }
+    }
+
+    function clearAllQuestions() {
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = '';
+        questionCount = 0;
+    }
+
+    // Добавляем первый вопрос при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        addQuestion(null, null);
+    });
+
+    document.getElementById('addQuestionBtn').addEventListener('click', function() {
+        addQuestion(null, null);
+    });
+
+    // ============ ОТПРАВКА ФОРМЫ ============
+    document.getElementById('quizForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const title = formData.get('title');
+        const description = formData.get('description');
+        const difficulty = parseInt(formData.get('difficulty'));
+
+        const questions = [];
+        const questionIndices = new Set();
+
+        for (let key of formData.keys()) {
+            const match = key.match(/questions\[(\d+)\]/);
+            if (match) {
+                questionIndices.add(parseInt(match[1]));
+            }
+        }
+
+        const sortedIndices = Array.from(questionIndices).sort((a, b) => a - b);
+
+        for (const qIdx of sortedIndices) {
+            const questionText = formData.get(`questions[${qIdx}].text`);
+            const questionPoints = parseInt(formData.get(`questions[${qIdx}].points`)) || 10;
+
+            const answers = [];
+            const answerIndices = new Set();
+
+            for (let key of formData.keys()) {
+                const match = key.match(new RegExp(`questions\\[${qIdx}\\]\\.answers\\[(\\d+)\\]\\.text`));
+                if (match) {
+                    answerIndices.add(parseInt(match[1]));
+                }
+            }
+
+            const sortedAnswerIndices = Array.from(answerIndices).sort((a, b) => a - b);
+
+            for (const aIdx of sortedAnswerIndices) {
+                const answerText = formData.get(`questions[${qIdx}].answers[${aIdx}].text`);
+                const isCorrect = formData.get(`questions[${qIdx}].answers[${aIdx}].isCorrect`) === 'on';
+
+                if (answerText && answerText.trim()) {
+                    answers.push({
+                        text: answerText,
+                        isCorrect: isCorrect
+                    });
+                }
+            }
+
+            if (questionText && questionText.trim()) {
+                questions.push({
+                    text: questionText,
+                    points: questionPoints,
+                    answers: answers
+                });
+            }
+        }
+
+        if (questions.length === 0) {
+            alert('Добавьте хотя бы один вопрос!');
+            return;
+        }
+
+        const data = {
+            title: title,
+            description: description,
+            difficulty: difficulty,
+            questions: questions
+        };
+
+        console.log("=== ОТПРАВЛЯЕМЫЕ ДАННЫЕ ===");
+        console.log(JSON.stringify(data, null, 2));
+
+        try {
+            const response = await fetch('/api/quizzes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            console.log("=== ОТВЕТ СЕРВЕРА ===");
+            console.log(result);
+
+            if (result.id) {
+                alert('Викторина создана!');
+                window.location.href = '/quizzes';
+            } else {
+                alert('Ошибка: ' + (result.message || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            console.error("Ошибка:", error);
+            alert('Ошибка подключения: ' + error.message);
+        }
+    });
+
+    // ============ РАБОТА С МОДАЛЬНЫМ ОКНОМ ============
+    const modal = document.getElementById('aiModal');
+    const aiCreateBtn = document.getElementById('aiCreateBtn');
+    const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+    const aiCancelBtn = document.getElementById('aiCancelBtn');
+    const aiLoading = document.getElementById('aiLoading');
+
+    aiCreateBtn.onclick = () => {
+        modal.style.display = 'flex';
+    };
+
+    aiCancelBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+
+    // ============ ГЕНЕРАЦИЯ ВИКТОРИНЫ ЧЕРЕЗ ИИ ============
+    aiGenerateBtn.onclick = async () => {
+        const topic = document.getElementById('aiTopic').value;
+        const questionsCount = document.getElementById('aiQuestionsCount').value;
+        const answersCount = document.getElementById('aiAnswersCount').value;
+        const difficulty = document.getElementById('aiDifficulty').value;
+
+        if (!topic) {
+            alert('Введите тему викторины');
+            return;
+        }
+
+        aiLoading.style.display = 'block';
+        aiGenerateBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/gigachat/generate-quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: topic,
+                    questionsCount: parseInt(questionsCount),
+                    answersCount: parseInt(answersCount),
+                    difficulty: difficulty
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('title').value = result.title;
+                document.getElementById('description').value = result.description;
+                document.getElementById('difficulty').value = result.difficulty;
+
+                clearAllQuestions();
+
+                for (let i = 0; i < result.questions.length; i++) {
+                    const q = result.questions[i];
+                    addQuestion(
+                        { text: q.text, points: q.points || 10 },
+                        q.answers
+                    );
+                }
+
+                modal.style.display = 'none';
+                alert('Викторина создана ИИ! Осталось только сохранить.');
+            } else {
+                alert('Ошибка: ' + (result.message || 'Не удалось сгенерировать викторину'));
+            }
+        } catch (error) {
+            console.error("Ошибка:", error);
+            alert('Ошибка: ' + error.message);
+        } finally {
+            aiLoading.style.display = 'none';
+            aiGenerateBtn.disabled = false;
+        }
+    };
+    </script>
+</body>
+</html>

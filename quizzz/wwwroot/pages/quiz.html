@@ -1,0 +1,428 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>{{Title}}</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%);
+            color: #2d2d2d;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .quiz-header {
+            background: linear-gradient(135deg, rgba(255, 109, 158, 0.1), rgba(255, 182, 193, 0.1));
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 109, 158, 0.2);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.8rem;
+        }
+
+        .quiz-header p {
+            color: #666;
+            margin: 0.5rem 0;
+        }
+
+        .question-block {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 109, 158, 0.15);
+            transition: all 0.3s ease;
+        }
+
+            .question-block:hover {
+                border-color: #ffb6c1;
+                box-shadow: 0 5px 15px rgba(255, 109, 158, 0.05);
+            }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #ffe0e8;
+        }
+
+        .question-num {
+            font-weight: 700;
+            color: #ff6d9e;
+        }
+
+        .question-points {
+            font-weight: 700;
+            color: #ffb6c1;
+        }
+
+        .question-text {
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #2d2d2d;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .answer-option {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem;
+            border-radius: 1rem;
+            background: #fefafc;
+            border: 1px solid #ffe0e8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+            .answer-option:hover {
+                background: #fff5f8;
+                border-color: #ffb6c1;
+                transform: translateX(5px);
+            }
+
+        input[type='radio'] {
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: #ff6d9e;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1.5rem;
+            border-radius: 60px;
+            transition: all 0.3s ease;
+        }
+
+            .submit-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px -8px #ff6d9e;
+            }
+
+        .nav-btn {
+            background: white;
+            color: #ff6d9e;
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 60px;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            border: 1px solid #ffb6c1;
+            transition: all 0.3s ease;
+        }
+
+            .nav-btn:hover {
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                color: white;
+                transform: translateY(-2px);
+                border-color: transparent;
+            }
+
+        .hint-btn {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            color: #ff6d9e;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 12px;
+            transition: all 0.3s ease;
+        }
+
+            .hint-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255, 109, 158, 0.2);
+            }
+
+            .hint-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: #ccc;
+                color: #888;
+                transform: none !important;
+                box-shadow: none !important;
+            }
+
+        .hint-box {
+            background: rgba(168, 237, 234, 0.2);
+            border-left: 4px solid #a8edea;
+            border-radius: 12px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 0.9rem;
+            color: #555;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .hint-content {
+            font-style: italic;
+        }
+
+            .hint-content.error {
+                color: #ff4444;
+            }
+
+        .hint-counter {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #ff6d9e;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 109, 158, 0.05);
+            border-radius: 60px;
+            display: inline-block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .quiz-header {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <a href='/quizzes' class='nav-btn'>← Назад к викторинам</a>
+
+        <div class='quiz-header'>
+            <h1>{{Title}}</h1>
+            <p>{{Description}}</p>
+            <p style='color: #ff6d9e; font-weight: 600;'>★ Максимум баллов: {{TotalPoints}}</p>
+        </div>
+
+        <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;'>
+            <div class='hint-counter' id='hintCounter'>💡 Подсказки: 0 / 0</div>
+            <input type='hidden' id='quizId' value='{{Id}}'>
+        </div>
+
+        <form id='quizForm' method='post' action='/quiz/{{Id}}/submit'>
+            {{QuestionsHtml}}
+            <button type='submit' class='submit-btn'>Завершить викторину</button>
+        </form>
+    </div>
+
+    <script>
+    let hintsUsed = 0;
+    let maxHints = 0;
+    let totalQuestions = 0;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionBlocks = document.querySelectorAll('.question-block');
+        totalQuestions = questionBlocks.length;
+        maxHints = Math.floor(totalQuestions / 5);
+
+        updateHintCounter();
+        updateHintButtons();
+
+        console.log(`Всего вопросов: ${totalQuestions}`);
+        console.log(`Доступно подсказок: ${maxHints}`);
+
+        document.querySelectorAll('.hint-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const questionId = this.getAttribute('data-id');
+                const questionText = this.getAttribute('data-text');
+                console.log('Нажата кнопка для вопроса:', questionId);
+                getHint(questionId, questionText);
+            });
+        });
+    });
+
+    function updateHintButtons() {
+        const hintButtons = document.querySelectorAll('.hint-btn');
+        hintButtons.forEach(btn => {
+            if (hintsUsed >= maxHints && maxHints > 0) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.textContent = 'Подсказки кончились';
+            } else {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.textContent = 'Подсказка';
+            }
+        });
+    }
+
+    function updateHintCounter() {
+        const counter = document.getElementById('hintCounter');
+        if (counter) {
+            counter.textContent = `Подсказки: ${hintsUsed} / ${maxHints}`;
+        }
+    }
+
+    async function getHint(questionId, questionText) {
+        console.log('getHint вызвана для вопроса:', questionId);
+
+        if (hintsUsed >= maxHints && maxHints > 0) {
+            alert('Вы использовали все подсказки для этой викторины!');
+            return;
+        }
+
+        const hintBox = document.getElementById(`hint-${questionId}`);
+        if (!hintBox) {
+            console.error('Не найден hintBox для вопроса:', questionId);
+            return;
+        }
+
+        const btn = document.querySelector(`.hint-btn[data-id="${questionId}"]`);
+        if (!btn) {
+            console.error('Не найдена кнопка для вопроса:', questionId);
+            return;
+        }
+
+        if (hintBox.style.display === 'block') {
+            hintBox.style.display = 'none';
+            btn.textContent = 'Подсказка';
+            return;
+        }
+
+        hintBox.style.display = 'block';
+        hintBox.innerHTML = "<div class='hint-content'>Загрузка подсказки...</div>";
+        btn.textContent = 'Загрузка...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/gigachat/hint', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questionText: questionText })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            hintBox.innerHTML = `<div class='hint-content'>💡 ${result.hint}</div>`;
+            btn.textContent = 'Скрыть подсказку';
+
+            hintsUsed++;
+            updateHintButtons();
+            updateHintCounter();
+
+            console.log(`Использовано подсказок: ${hintsUsed} / ${maxHints}`);
+
+        } catch (error) {
+            console.error("Ошибка:", error);
+            hintBox.innerHTML = `<div class='hint-content error'>Не удалось получить подсказку: ${error.message}</div>`;
+            btn.textContent = 'Подсказка';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    document.getElementById('quizForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const answers = [];
+
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('q')) {
+                answers.push({
+                    questionId: parseInt(key.substring(1)),
+                    answerId: parseInt(value)
+                });
+            }
+        }
+
+        const data = {
+            answers: answers,
+            usedHints: hintsUsed,
+            totalQuestions: totalQuestions
+        };
+
+        console.log("Отправка результатов:", data);
+
+        try {
+            const response = await fetch(`/quiz/{{Id}}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.text();
+            document.open();
+            document.write(result);
+            document.close();
+
+        } catch (error) {
+            console.error("Ошибка:", error);
+            alert('Произошла ошибка при отправке результатов. Попробуйте ещё раз.');
+        }
+    });
+    </script>
+</body>
+</html>

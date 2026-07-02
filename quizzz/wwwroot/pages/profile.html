@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Профиль</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <link rel='stylesheet' href='/css/style.css'>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .avatar {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats {
+            background: rgba(255, 109, 158, 0.1);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #ffe0e8;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            color: #ff6d9e;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            background: white;
+            color: #ff6d9e;
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 60px;
+            font-weight: 500;
+            border: 1px solid #ffb6c1;
+            transition: all 0.3s ease;
+        }
+
+            .btn:hover {
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        .gamification-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+            .gamification-stats .stat {
+                background: rgba(255, 109, 158, 0.1);
+                padding: 0.3rem 0.8rem;
+                border-radius: 60px;
+                color: #ff6d9e;
+                font-size: 0.9rem;
+            }
+
+        .achievements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .achievement {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid #ffd700;
+            border-radius: 60px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='avatar'>🌸</div>
+        <h1>{{Login}}</h1>
+
+        <div class='gamification-stats'>
+            <span class='stat'>⚡ {{Level}} уровень</span>
+            <span class='stat'>🔥 {{Streak}} дн.</span>
+            <span class='stat'>🏆 {{League}}</span>
+        </div>
+
+        <div class='stats'>
+            <div class='stat-item'>
+                <span class='stat-label'>Всего баллов</span>
+                <span class='stat-value'>{{TotalPoints}}</span>
+            </div>
+            <div class='stat-item'>
+                <span class='stat-label'>XP</span>
+                <span class='stat-value'>{{XP}}</span>
+            </div>
+            <div class='stat-item'>
+                <span class='stat-label'>Пройдено викторин</span>
+                <span class='stat-value'>{{QuizzesPassed}}</span>
+            </div>
+            <div class='stat-item'>
+                <span class='stat-label'>Создано викторин</span>
+                <span class='stat-value'>{{QuizzesCreated}}</span>
+            </div>
+            <div class='stat-item'>
+                <span class='stat-label'>Лучший результат</span>
+                <span class='stat-value'>{{BestScore}}</span>
+            </div>
+        </div>
+
+        <div class='achievements'>
+            {{AchievementsHtml}}
+        </div>
+
+        <div class='button-group'>
+            <a href='/quizzes' class='btn'>Викторины</a>
+            <a href='/create-quiz' class='btn'>Создать</a>
+            <a href='/' class='btn'>Главная</a>
+            <form method='post' action='/logout' style='display:inline;'>
+                <button type='submit' class='btn'>Выйти</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

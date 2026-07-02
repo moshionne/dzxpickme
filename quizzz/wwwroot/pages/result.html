@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Результат</title>
+    <meta charset='UTF-8'>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 45px -12px rgba(255, 105, 180, 0.3);
+        }
+
+        .score {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff6d9e, #ffb6c1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin: 1rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background: white;
+            color: #ff6d9e;
+            text-decoration: none;
+            padding: 0.7rem 1.5rem;
+            margin: 0.5rem;
+            border-radius: 60px;
+            font-weight: 600;
+            border: 1.5px solid #ffb6c1;
+            transition: all 0.3s ease;
+        }
+
+            .btn:hover {
+                background: linear-gradient(135deg, #ff6d9e, #ff8eb5);
+                color: white;
+            }
+
+        .gamification-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+            .gamification-stats span {
+                background: rgba(255, 109, 158, 0.1);
+                padding: 0.3rem 0.8rem;
+                border-radius: 60px;
+                color: #ff6d9e;
+                font-size: 0.9rem;
+            }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            border-radius: 1rem;
+            padding: 1.2rem 1.5rem;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.2);
+            border-left: 5px solid #ffd700;
+            max-width: 380px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideUp 0.5s ease;
+            z-index: 1000;
+        }
+
+            .toast-notification.toast-hiding {
+                opacity: 0;
+                transform: translateX(100px);
+                pointer-events: none;
+            }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .toast-icon {
+            font-size: 2.5rem;
+        }
+
+        .toast-title {
+            font-size: 0.8rem;
+            color: #ff6d9e;
+            font-weight: 600;
+        }
+
+        .toast-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .toast-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .toast-xp {
+            display: inline-block;
+            background: #ff6d9e;
+            color: white;
+            padding: 0.1rem 0.6rem;
+            border-radius: 60px;
+            font-size: 0.7rem;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #ccc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>Результат</h1>
+        <div class='score'>{{Score}} / {{MaxScore}}</div>
+        <div>({{Percentage}}%)</div>
+        <div class='gamification-stats'>
+            <span>⚡ {{Level}} уровень</span>
+            <span>🔥 {{Streak}} дн.</span>
+            <span>🏆 {{League}}</span>
+        </div>
+        {{AchievementsHtml}}
+        <div style='margin-top: 1.5rem;'>
+            <a href='/' class='btn'>На главную</a>
+            <a href='/quizzes' class='btn'>Другие викторины</a>
+        </div>
+    </div>
+    {{ToastScript}}
+</body>
+</html>
