@@ -1,6 +1,8 @@
 <?php
 $secrets = require __DIR__ . '/secrets.php';
 
+error_log('DB host: ' . $secrets['db_host'] . ', user: ' . $secrets['db_user'] . ', port: ' . $secrets['db_port']);
+
 $dsn = "pgsql:host={$secrets['db_host']};port={$secrets['db_port']};"
      . "dbname={$secrets['db_name']};sslmode=require";
 

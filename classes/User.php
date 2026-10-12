@@ -1,17 +1,9 @@
 <?php
+require_once __DIR__ . '/Model.php';
 
-class User
+class User extends Model
 {
-    private PDO $pdo;
 
-    public function __construct(PDO $pdo)
-    {
-        $this->pdo = $pdo;
-    }
-
-    /**
-     * проверка существования пользователея с таким логином/имейлом
-     */
     public function existsByUsernameOrEmail(string $username, string $email): bool
     {
         $stmt = $this->pdo->prepare(
@@ -21,9 +13,6 @@ class User
         return (bool) $stmt->fetch();
     }
 
-    /**
-     * регаем пользователя
-     */
     public function register(string $username, string $email, string $password): int
     {
         $hash = password_hash($password, PASSWORD_DEFAULT);
@@ -36,9 +25,6 @@ class User
         return (int) $user['id'];
     }
 
-    /**
-     * ищем пользователя по логину/имейлу
-     */
     public function findByLoginOrEmail(string $login): ?array
     {
         $stmt = $this->pdo->prepare(
@@ -50,9 +36,6 @@ class User
         return $user ?: null;
     }
 
-    /**
-     * проверка пароля(по хешу)
-     */
     public function verifyPassword(string $password, string $hash): bool
     {
         return password_verify($password, $hash);

@@ -1,0 +1,6 @@
+{
+    "require": {
+        "apify/apify-client": "^0.8.0",
+        "aws/aws-sdk-php": "^3.400"
+    }
+}

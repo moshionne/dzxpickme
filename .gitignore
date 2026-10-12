@@ -1,11 +1,8 @@
 config/secrets.php
-
-uploads/*
-!uploads/.gitkeep
-
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-
 *.log
+vendor/
+composer.lock
