@@ -4,7 +4,7 @@ require __DIR__ . '/config/db.php';
 require __DIR__ . '/classes/ClothingItem.php';
 require __DIR__ . '/classes/PinterestScraper.php';
 
-$secrets = require __DIR__ . '/config/secrets.php';
+$secrets = require __DIR__ . '/secrets.php';
 
 // поисковый запрос
 $query = trim($_GET['q'] ?? 'y2k outfit');

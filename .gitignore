@@ -1,4 +1,4 @@
-config/secrets.php
+secrets.php
 .vscode/
 .idea/
 .DS_Store

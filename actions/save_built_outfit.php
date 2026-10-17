@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../classes/YandexStorage.php';
 
-$secrets = require __DIR__ . '/../config/secrets.php';
+$secrets = require __DIR__ . '/../secrets.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 
